@@ -1,4 +1,3 @@
-from transformers import T5Tokenizer, T5ForConditionalGeneration
 from transformers import T5Config, T5TokenizerFast 
 from allennlp.data.tokenizers import PretrainedTransformerTokenizer
 from torch.utils.data import Dataset, DataLoader, RandomSampler
@@ -163,7 +162,7 @@ def get_task_data(args, dr):
     if args.meta.task == 'race':
         strings = dr.get_inputs('train')
         labels = [int(s['answer_idx']) for s in strings]
-    elif args.meta.task == "newsgroups" or args.meta.task == "imdb":
+    elif args.meta.task == "newsgroups" or args.meta.task == "imdb" or args.meta.task == "tweepfake":
         strings, labels = dr.get_inputs('train', return_labels=True)
     
     string_indices = np.array(range(len(strings)))
