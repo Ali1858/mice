@@ -43,6 +43,7 @@ class Masker():
         
     def _get_mask_indices(self, editor_toks):
         """ Helper function to get indices of Editor tokens to mask. """
+        
         raise NotImplementedError("Need to implement this in subclass")
 
     def get_all_masked_strings(self, editable_seg):
@@ -70,7 +71,7 @@ class Masker():
         return "<extra_id_" + str(idx) + ">"
 
     def _get_grouped_mask_indices(
-            self, editable_seg, pred_idx, editor_mask_indices, 
+            self, editable_seg, pred_idx, predictor_tok_end_idx, editor_mask_indices, 
             editor_toks, **kwargs):
         """ Groups consecutive mask indices.
         Applies heuristics to enable better generation:
@@ -81,7 +82,7 @@ class Masker():
 
         if editor_mask_indices is None:
             editor_mask_indices = self._get_mask_indices(
-                    editable_seg, editor_toks, pred_idx, **kwargs)
+                    editable_seg, editor_toks, pred_idx, predictor_tok_end_idx,**kwargs)
 
         new_editor_mask_indices = set(editor_mask_indices)
         grouped_editor_mask_indices = [list(group) for group in \
@@ -108,16 +109,20 @@ class Masker():
         grouped_editor_mask_indices = grouped_editor_mask_indices[:99]
         return grouped_editor_mask_indices
 
+
+   # masker.get_masked_string(orig_inp, label_idx, predictor_tok_end_idx=len(predictor_tokenized))
+
     def get_masked_string(
-            self, editable_seg, pred_idx, 
+            self, editable_seg, pred_idx, predictor_tok_end_idx,
             editor_mask_indices = None, **kwargs):
         """ Gets masked string masking tokens w highest predictor gradients.
         Requires mapping predictor tokens to Editor tokens because edits are
         made on Editor tokens. """
 
         editor_toks = self.editor_tok_wrapper.tokenize(editable_seg)
+
         grpd_editor_mask_indices = self._get_grouped_mask_indices(
-                editable_seg, pred_idx, editor_mask_indices, 
+                editable_seg, pred_idx, predictor_tok_end_idx, editor_mask_indices, 
                 editor_toks, **kwargs)
         
         span_idx = len(grpd_editor_mask_indices) - 1
@@ -412,7 +417,7 @@ class GradientMasker(Masker):
         return ig_grads    
         
     def get_important_editor_tokens(
-            self, editable_seg, pred_idx, editor_toks, 
+            self, editable_seg, pred_idx, editor_toks, predictor_tok_end_idx,
             labeled_instance=None, 
             predic_tok_start_idx=None, 
             predic_tok_end_idx=None, 
@@ -553,9 +558,9 @@ class GradientMasker(Masker):
         highest_predic_tok_indices = ordered_predic_tok_indices[:num_return_toks]
         return highest_editor_tok_indices
     
-    def _get_mask_indices(self, editable_seg, editor_toks, pred_idx, **kwargs):
+    def _get_mask_indices(self, editable_seg, editor_toks, pred_idx,predictor_tok_end_idx, **kwargs):
         """ Helper function to get indices of Editor tokens to mask. """
         
         editor_mask_indices = self.get_important_editor_tokens(
-                editable_seg, pred_idx, editor_toks, **kwargs)
+                editable_seg, pred_idx, editor_toks, predictor_tok_end_idx,**kwargs)
         return editor_mask_indices 

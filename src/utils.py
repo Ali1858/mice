@@ -30,6 +30,9 @@ from src.predictors.imdb.imdb_dataset_reader import ImdbDatasetReader
 from src.predictors.newsgroups.newsgroups_dataset_reader \
         import NewsgroupsDatasetReader
 from src.predictors.race.race_dataset_reader import RaceDatasetReader
+
+from src.predictors.tweepfake.tweepfake_dataset_reader import TweepfakeDatasetReader
+
 from src.masker import Masker, RandomMasker, GradientMasker
 
 logger = logging.getLogger(__name__)
@@ -46,8 +49,8 @@ def get_shared_parsers():
     meta_parser = argparse.ArgumentParser()
     meta_parser.add_argument("-task", required=True, 
             help='Name of task. Currently, only RACE, IMDB, \
-                    and Newsgroups are supported.', 
-            choices=['race', 'imdb', 'newsgroups'])
+                    Newsgroups and Tweepfake are supported.', 
+            choices=['race', 'imdb', 'newsgroups','tweepfake'])
     meta_parser.add_argument("-results_dir", default="results", 
             help='Results dir. Where to store results.')
 
@@ -172,7 +175,7 @@ def write_args(args_path, args):
 ####################################################################
 
 def get_dataset_reader(task, predictor):
-    task_options = ["imdb", "race", "newsgroups"]
+    task_options = ["imdb", "race", "newsgroups","tweepfake"]
     if task not in task_options:
         raise NotImplementedError(f"Task {task} not implemented; \
                 must be one of {task_options}")
@@ -187,6 +190,11 @@ def get_dataset_reader(task, predictor):
                 token_indexers=predictor._dataset_reader._token_indexers, 
                 tokenizer=predictor._dataset_reader._tokenizer)
 
+    elif task == "tweepfake":
+        return TweepfakeDatasetReader(
+                token_indexers=predictor._dataset_reader._token_indexers, 
+                tokenizer=predictor._dataset_reader._tokenizer)            
+
 def format_classif_input(inp, label):
     return "label: " + label + ". input: " + inp 
 
@@ -197,8 +205,9 @@ def format_multiple_choice_input(context, question, options, answer_idx):
         formatted_str += " choice" + str(option_idx) + ": " + option
     return formatted_str
 
+
 def load_predictor(task, predictor_folder="trained_predictors/"):
-    task_options = ["imdb", "race", "newsgroups"]
+    task_options = ["imdb", "race", "newsgroups","tweepfake"]
     if task not in task_options:
         raise NotImplementedError(f"Task {task} not implemented; \
                 must be one of {task_options}")
@@ -211,6 +220,7 @@ def load_predictor(task, predictor_folder="trained_predictors/"):
         "imdb": ImdbDatasetReader,
         "newsgroups": NewsgroupsDatasetReader,
         "race": RaceDatasetReader,
+        "tweepfake" : TweepfakeDatasetReader
     }
 
     cuda_device = 0 if torch.cuda.is_available() else -1
