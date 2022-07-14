@@ -105,15 +105,13 @@ Follow the steps below to extend this repo for your own task.
 
 2.  **Dataset reader**: Create a task specific dataset reader in a file `{TASK}_dataset_reader.py` within that subfolder. It should have methods: `text_to_instance()`, `_read()`, and `get_inputs()`.
 
-3.  **Dataset for tweepfake**: Download the data from [kaggle twitter dataset](https://www.kaggle.com/datasets/mtesconi/twitter-deep-fake-text) and keep it inside the folder `src/predictors/tweepfake`.
+3.  **Train Predictor**: Create a training config (see `src/predictors/imdb/imdb_roberta.json` for an example). Then train the Predictor using AllenNLP (see above commands or commands in `run_all.sh` for examples).
 
-4.  **Train Predictor**: Create a training config (see `src/predictors/imdb/imdb_roberta.json` for an example). Then train the Predictor using AllenNLP (see above commands or commands in `run_all.sh` for examples).
-
-5.  **Train Editor Model**: Depending on the task, you may have to create a new `StageOneDataset` subclass (see `RaceStageOneDataset` in `src/dataset.py` for an example of how to inherit from `StageOneDataset`). 
+4.  **Train Editor Model**: Depending on the task, you may have to create a new `StageOneDataset` subclass (see `RaceStageOneDataset` in `src/dataset.py` for an example of how to inherit from `StageOneDataset`). 
     - For classification tasks, the existing base `StageOneDataset` class should work.
     - For new multiple-choice QA tasks with dataset readers patterned after the `RaceDatasetReader` (`src/predictors/race/race_dataset_reader.py`), the existing `RaceStageOneDataset` class should work.
 
-6.  **Generate Edits**: Depending on the task, you may have to create a new `Editor` subclass (see `RaceEditor` in `src/editor.py` for an example of how to inherit from `Editor`). 
+5.  **Generate Edits**: Depending on the task, you may have to create a new `Editor` subclass (see `RaceEditor` in `src/editor.py` for an example of how to inherit from `Editor`). 
     - For classification tasks, the existing base `Editor` class should work. 
     - For multiple-choice QA with dataset readers patterned after `RaceDatasetReader`, the existing `RaceEditor` class should work. 
 

@@ -108,13 +108,13 @@ class Editor():
             return instance, [None] 
         return instance
 
-    def get_sorted_token_indices(self, inp, grad_pred_idx,predictor_tok_end_idx = None):
+    def get_sorted_token_indices(self, inp, grad_pred_idx):
         """ Get token indices to mask, sorted by gradient value """
 
         editable_seg = self.get_editable_seg_from_input(inp)
         editable_toks = self.tokenizer_wrapper.tokenize(editable_seg)[:-1]
         sorted_token_indices = self.masker.get_important_editor_tokens(
-                editable_seg, grad_pred_idx,editable_toks,predictor_tok_end_idx,
+                editable_seg, grad_pred_idx, editable_toks, 
                 num_return_toks = len(editable_toks)
                 )
         return sorted_token_indices 
@@ -156,7 +156,7 @@ class Editor():
 
     def _prepare_input_for_editor(
             self, inp, targ_pred_idx, grad_pred_idx,
-            sorted_token_indices = None,predictor_tok_end_idx = None):
+            sorted_token_indices = None):
         """ Helper function that prepares masked input for Editor. """
         
         tokens = self.tokenizer_wrapper.tokenize(inp)[:-1]
@@ -167,13 +167,13 @@ class Editor():
             token_ind_to_mask = sorted_token_indices[:num_return_toks]
             grouped_ind_to_mask, token_ind_to_mask, masked_inp, orig_spans = \
                     self.masker.get_masked_string(
-                            inp, grad_pred_idx, predictor_tok_end_idx,
+                            inp, grad_pred_idx, 
                             editor_mask_indices=token_ind_to_mask
                             )
 
         else:
             grouped_ind_to_mask, token_ind_to_mask, masked_inp, orig_spans = \
-                    self.masker.get_masked_string(inp, grad_pred_idx,predictor_tok_end_idx)
+                    self.masker.get_masked_string(inp, grad_pred_idx)
 
         max_length = math.ceil((self.masker.mask_frac + 0.2) * \
                 len(sorted_token_indices))
