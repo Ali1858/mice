@@ -15,7 +15,7 @@
         }
     },
     "model": {
-        "type": "basic_classifier",
+        "type": "vmasker_classifier",
         "namespace": "tags",
         "seq2vec_encoder": {
             "type": "bert_pooler",
