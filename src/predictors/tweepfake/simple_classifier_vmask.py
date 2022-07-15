@@ -15,15 +15,15 @@ from allennlp.training.metrics import CategoricalAccuracy
 
 
 class VMASK(nn.Module):
-    def __init__(self, args):
+    def __init__(self):
         super(VMASK, self).__init__()
 
-        self.device = args.device
-        self.mask_hidden_dim = args.mask_hidden_dim
+        self.device = "cuda" #args.device
+        self.mask_hidden_dim = 100 #args.mask_hidden_dim
         self.activations = {'tanh': torch.tanh, 'sigmoid': torch.sigmoid, 'relu': torch.relu,
                             'leaky_relu': F.leaky_relu}
-        self.activation = self.activations[args.activation]
-        self.embed_dim = args.embed_dim
+        self.activation = self.activations["tanh"]#args.activation]
+        self.embed_dim = 768#args.embed_dim
         self.linear_layer = nn.Linear(self.embed_dim, self.mask_hidden_dim)
         self.hidden2p = nn.Linear(self.mask_hidden_dim, 2)
 
@@ -47,7 +47,7 @@ class VMASK(nn.Module):
         return p
 
 
-@Model.register("basic_classifier")
+@Model.register("vmasker_classifier")
 class BasicClassifier(Model):
     """
     This `Model` implements a basic text classifier. After embedding the text into
@@ -128,7 +128,6 @@ class BasicClassifier(Model):
     def forward(  # type: ignore
         self,
         tokens: TextFieldTensors,
-        flag: bool,
         label: torch.IntTensor = None,
         metadata: MetadataField = None
     ) -> Dict[str, torch.Tensor]:
@@ -162,7 +161,7 @@ class BasicClassifier(Model):
             embedded_text = self._dropout(embedded_text)
 
         p = self.maskmodel.get_statistics_batch(embedded_text)
-        embedded_text = self.maskmodel(embedded_text, p, flag)
+        embedded_text = self.maskmodel(embedded_text, p, "train")
 
         if self._feedforward is not None:
             embedded_text = self._feedforward(embedded_text)
