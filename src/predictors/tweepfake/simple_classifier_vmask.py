@@ -162,7 +162,7 @@ class BasicClassifier(Model):
             embedded_text = self._dropout(embedded_text)
 
         p = self.maskmodel.get_statistics_batch(embedded_text)
-        x_prime = self.maskmodel(embedded_text, p, flag)
+        embedded_text = self.maskmodel(embedded_text, p, flag)
 
         if self._feedforward is not None:
             embedded_text = self._feedforward(embedded_text)
