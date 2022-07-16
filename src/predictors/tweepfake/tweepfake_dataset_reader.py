@@ -46,11 +46,11 @@ class TweepfakeDatasetReader(DatasetReader):
     def get_inputs(self,file_path,return_labels = False):
 
        # if file_path is 'test' set filepath to tweepfake test csv   
-       # else filepath to tweepfake train csv
-     
-        df = pd.read_csv(file_path)
+       # else set filepath to tweepfake train csv
+        
+        df = pd.read_csv(file_path)       
+        np.random.seed(self.random_seed)       
 
-        np.random.seed(self.random_seed)
         strings = [None] * len(df)
         labels = [None] * len(df)
       
@@ -62,7 +62,24 @@ class TweepfakeDatasetReader(DatasetReader):
             return strings, labels
         return strings  
 
-    
+
+    @overrides
+    def _read(self, file_path):
+
+       # if file_path is 'test' set filepath to tweepfake test csv   
+       # else set filepath to tweepfake train csv
+        
+        df = pd.read_csv(file_path)       
+        np.random.seed(self.random_seed)
+           
+        for index,row in df.iterrows():
+          label = get_label(str(row['account.type']))
+          print(label)
+          yield self.text_to_instance(
+                    clean_text(row['text'], special_chars=["<br />", "\t"]), 
+                    label)
+
+
     def text_to_instance(
             self, string: str, label:str = None) -> Optional[Instance]:
         tokens = self._tokenizer.tokenize(string)
