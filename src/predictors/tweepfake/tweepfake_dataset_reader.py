@@ -45,18 +45,16 @@ class TweepfakeDatasetReader(DatasetReader):
     
     def get_inputs(self,file_path,return_labels = False):
 
-        if file_path == 'test':
-            file_path = "src/predictors/tweepfake/test.csv"
-        elif file_path == 'train':
-            file_path = "src/predictors/tweepfake/train.csv"
+       # if file_path is 'test' set filepath to tweepfake test csv   
+       # else set filepath to tweepfake train csv
+        
+        df = pd.read_csv(file_path)       
+        np.random.seed(self.random_seed)       
 
-        df = pd.read_csv(file_path)
-        df = df[:10]
-        np.random.seed(self.random_seed)
         strings = [None] * len(df)
         labels = [None] * len(df)
       
-        for index,row in df[:10].iterrows():
+        for index,row in df.iterrows():
           labels[index] = get_label(str(row['account.type']))
           strings[index] = clean_text(row['text'], special_chars=["<br />", "\t"])
 
@@ -64,7 +62,24 @@ class TweepfakeDatasetReader(DatasetReader):
             return strings, labels
         return strings  
 
-    
+
+    @overrides
+    def _read(self, file_path):
+
+       # if file_path is 'test' set filepath to tweepfake test csv   
+       # else set filepath to tweepfake train csv
+        
+        df = pd.read_csv(file_path)       
+        np.random.seed(self.random_seed)
+           
+        for index,row in df.iterrows():
+          label = get_label(str(row['account.type']))
+          print(label)
+          yield self.text_to_instance(
+                    clean_text(row['text'], special_chars=["<br />", "\t"]), 
+                    label)
+
+
     def text_to_instance(
             self, string: str, label:str = None) -> Optional[Instance]:
         tokens = self._tokenizer.tokenize(string)

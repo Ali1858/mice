@@ -105,7 +105,7 @@ Follow the steps below to extend this repo for your own task.
 
 2.  **Dataset reader**: Create a task specific dataset reader in a file `{TASK}_dataset_reader.py` within that subfolder. It should have methods: `text_to_instance()`, `_read()`, and `get_inputs()`.
 
-3.  **Dataset for tweepfake**: Download the data from [kaggle twitter dataset](https://www.kaggle.com/datasets/mtesconi/twitter-deep-fake-text) and keep it inside the folder `src/predictors/tweepfake`.
+3.  **Dataset for tweepfake**: Download the data from [kaggle twitter dataset](https://www.kaggle.com/code/kerneler/starter-tweepfake-twitter-deep-fake-9a6ff869-1/data) and keep it inside the folder `src/predictors/tweepfake`.
 
 4.  **Train Predictor**: Create a training config (see `src/predictors/imdb/imdb_roberta.json` for an example). Then train the Predictor using AllenNLP (see above commands or commands in `run_all.sh` for examples).
 
