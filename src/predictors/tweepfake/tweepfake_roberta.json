@@ -37,7 +37,7 @@
     "validation_data_path": "src/predictors/tweepfake/validation.csv",
     "trainer": {
         "num_epochs": 3,
-        "validation_metric": "+acc",
+        "validation_metric": "+accuracy",
 	 "learning_rate_scheduler": {
 	    "type": "slanted_triangular",
 	    "cut_frac": 0.06		
