@@ -4,13 +4,13 @@
         "token_indexers": {
             "tokens": {
                 "type": "pretrained_transformer",
-                "max_length": 512,
+                "max_length": 128,
                 "model_name": "roberta-large"
             }
         },
         "tokenizer": {
             "type": "pretrained_transformer",
-            "max_length": 512,
+            "max_length": 128,
             "model_name": "roberta-large"
         }
     },
@@ -26,16 +26,18 @@
             "token_embedders": {
                 "tokens": {
                     "type": "pretrained_transformer",
-                    "max_length": 512,
+                    "max_length": 128,
                     "model_name": "roberta-large"
                 }
             }
         }
     },
-    "train_data_path": "train",
-    "test_data_path": "test",
+    "train_data_path": "src/predictors/tweepfake/train.csv",
+    "test_data_path": "src/predictors/tweepfake/test.csv",
+    "validation_data_path": "src/predictors/tweepfake/validation.csv",
     "trainer": {
-        "num_epochs": 5,
+        "num_epochs": 3,
+        "validation_metric": "+acc",
 	 "learning_rate_scheduler": {
 	    "type": "slanted_triangular",
 	    "cut_frac": 0.06		
@@ -46,11 +48,19 @@
             "weight_decay": 0.1
         }
     },
-    "evaluate_on_test": true,
     "data_loader": {
         "batch_sampler": {
             "type": "bucket",
             "batch_size": 8,
+            "sorting_keys": [
+                "tokens"
+            ]
+        }
+    },
+    "validation_data_loader": {
+        "batch_sampler": {
+            "type": "bucket",
+            "batch_size": 16,
             "sorting_keys": [
                 "tokens"
             ]

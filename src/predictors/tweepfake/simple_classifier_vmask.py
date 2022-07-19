@@ -23,7 +23,7 @@ class VMASK(nn.Module):
         self.activations = {'tanh': torch.tanh, 'sigmoid': torch.sigmoid, 'relu': torch.relu,
                             'leaky_relu': F.leaky_relu}
         self.activation = self.activations["tanh"]#args.activation]
-        self.embed_dim = 768#args.embed_dim
+        self.embed_dim = 1024#args.embed_dim
         self.linear_layer = nn.Linear(self.embed_dim, self.mask_hidden_dim)
         self.hidden2p = nn.Linear(self.mask_hidden_dim, 2)
 
@@ -150,7 +150,13 @@ class BasicClassifier(Model):
                 A scalar loss to be optimised.
         """
         embedded_text = self._text_field_embedder(tokens)
+        print(embedded_text.shape)
         mask = get_text_field_mask(tokens)
+
+
+        p = self.maskmodel.get_statistics_batch(embedded_text)
+        embedded_text = self.maskmodel(embedded_text, p, "train")
+        
 
         if self._seq2seq_encoder:
             embedded_text = self._seq2seq_encoder(embedded_text, mask=mask)
@@ -159,9 +165,6 @@ class BasicClassifier(Model):
 
         if self._dropout:
             embedded_text = self._dropout(embedded_text)
-
-        p = self.maskmodel.get_statistics_batch(embedded_text)
-        embedded_text = self.maskmodel(embedded_text, p, "train")
 
         if self._feedforward is not None:
             embedded_text = self._feedforward(embedded_text)

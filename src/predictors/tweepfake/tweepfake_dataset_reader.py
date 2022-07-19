@@ -74,7 +74,6 @@ class TweepfakeDatasetReader(DatasetReader):
            
         for index,row in df.iterrows():
           label = get_label(str(row['account.type']))
-          print(label)
           yield self.text_to_instance(
                     clean_text(row['text'], special_chars=["<br />", "\t"]), 
                     label)
