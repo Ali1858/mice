@@ -79,12 +79,13 @@ class Masker():
                 (See Appendix: observed degeneration after 27th sentinel token)
             - Mask max of 100 spans (since there are 100 sentinel tokens in T5)
         """
-
+        ## get mask indices if its none. 
         if editor_mask_indices is None:
             editor_mask_indices = self._get_mask_indices(
                     editable_seg, editor_toks, pred_idx, predictor_tok_end_idx,**kwargs)
-
+        ## unique 
         new_editor_mask_indices = set(editor_mask_indices)
+        ## group all the consecutive indice [a, b, c, e, f, h, i,j] --> [[a,b,c], [e,f], [h,i,j]]
         grouped_editor_mask_indices = [list(group) for group in \
                 mit.consecutive_groups(sorted(new_editor_mask_indices))]
 
@@ -105,7 +106,7 @@ class Masker():
         new_editor_mask_indices = list(new_editor_mask_indices)
         grouped_editor_mask_indices = [list(group) for group in \
                 mit.consecutive_groups(sorted(new_editor_mask_indices))]
-        
+        # only take 100 indices
         grouped_editor_mask_indices = grouped_editor_mask_indices[:99]
         return grouped_editor_mask_indices
 
@@ -118,7 +119,7 @@ class Masker():
         """ Gets masked string masking tokens w highest predictor gradients.
         Requires mapping predictor tokens to Editor tokens because edits are
         made on Editor tokens. """
-
+        ## editor tokenized input
         editor_toks = self.editor_tok_wrapper.tokenize(editable_seg)
 
         grpd_editor_mask_indices = self._get_grouped_mask_indices(
@@ -126,10 +127,12 @@ class Masker():
                 editor_toks, **kwargs)
         
         span_idx = len(grpd_editor_mask_indices) - 1
+        ## basically return <extra_id_[number]>
         label = Masker._get_sentinel_token(len(grpd_editor_mask_indices))
         masked_seg = editable_seg
 
         # Iterate over spans in reverse order and mask tokens
+        # concat each consecutive group with each other
         for span in grpd_editor_mask_indices[::-1]:
 
             span_char_start = editor_toks[span[0]].idx
@@ -152,6 +155,123 @@ class Masker():
 
         return grpd_editor_mask_indices, editor_mask_indices, masked_seg, label
             
+class VMasker(Masker):
+    """ Masks randomly chosen spans. """ 
+    
+    def __init__(
+            self, 
+            mask_frac, 
+            editor_tok_wrapper, 
+            predictor, 
+            max_tokens
+        ):
+        super().__init__(mask_frac, editor_tok_wrapper, max_tokens)
+
+        self.predictor = predictor
+
+    
+    def _get_word_positions(self, predic_tok, editor_toks):
+        """ Helper function to map from (sub)tokens of Predictor to 
+        token indices of Editor tokenizer. Assumes the tokens are in order.
+        Raises MaskError if tokens cannot be mapped 
+            This sometimes happens due to inconsistencies in way text is 
+            tokenized by different tokenizers. """
+
+        return_word_idx = None
+        predic_tok_start = predic_tok.idx
+        predic_tok_end = predic_tok.idx_end
+   
+        if predic_tok_start is None or predic_tok_end is None:
+           return [], [], [] 
+        
+        class Found(Exception): pass
+        try:
+            for word_idx, word_token in reversed(list(enumerate(editor_toks))):
+                if editor_toks[word_idx].idx is None:
+                    continue
+                    
+                # Ensure predic_tok start >= start of last Editor tok
+                if word_idx == len(editor_toks) - 1:
+                    if predic_tok_start >= word_token.idx:
+                        return_word_idx = word_idx
+                        raise Found
+                        
+                # For all other Editor toks, ensure predic_tok start 
+                # >= Editor tok start and < next Editor tok start
+                elif predic_tok_start >= word_token.idx:
+                    for cand_idx in range(word_idx + 1, len(editor_toks)):
+                        if editor_toks[cand_idx].idx is None:
+                            continue
+                        elif predic_tok_start < editor_toks[cand_idx].idx:
+                            return_word_idx = word_idx
+                            raise Found
+        except Found:
+            pass 
+
+        if return_word_idx is None:
+            return [], [], []
+
+        last_idx = return_word_idx
+        if predic_tok_end > editor_toks[return_word_idx].idx_end:
+            for next_idx in range(return_word_idx, len(editor_toks)):
+                if editor_toks[next_idx].idx_end is None:
+                    continue
+                if predic_tok_end <= editor_toks[next_idx].idx_end:
+                    last_idx = next_idx
+                    break
+ 
+            return_indices = []
+            return_starts = []
+            return_ends = []
+
+            for cand_idx in range(return_word_idx, last_idx + 1):
+                return_indices.append(cand_idx)
+                return_starts.append(editor_toks[cand_idx].idx)
+                return_ends.append(editor_toks[cand_idx].idx_end)
+            if not predic_tok_start >= editor_toks[return_word_idx].idx:
+                raise MaskError
+
+            # Sometimes BERT tokenizers add extra tokens if spaces at end
+            if last_idx != len(editor_toks)-1 and \
+                    predic_tok_end > editor_toks[last_idx].idx_end:
+                    raise MaskError
+
+            return return_indices, return_starts, return_ends
+
+        return_tuple = ([return_word_idx], 
+                            [editor_toks[return_word_idx].idx], 
+                            [editor_toks[return_word_idx].idx_end])
+        return return_tuple
+
+
+    def _get_mask_indices(self, editable_seg, editor_toks, pred_idx,predictor_tok_end_idx, **kwargs):
+        """ Helper function to get indices of Editor tokens to mask. """
+        # label or pred token id
+        print(editable_seg)
+        vmask_indices = self.predictor.predict(editable_seg)['vmask']
+
+        temp_tokenizer = self.predictor._dataset_reader._tokenizer
+        all_predic_toks = temp_tokenizer.tokenize(editable_seg)
+
+        vmask_indices = [self._get_word_positions(
+            all_predic_toks[idx], editor_toks)[0] \
+                    for idx in vmask_indices \
+                    if all_predic_toks[idx] not in self.predictor_special_toks]
+        print(vmask_indices)
+        vmask_indices = [item for sublist in vmask_indices for item in sublist]
+
+
+        if num_return_toks is None:
+            num_return_toks = math.ceil(
+                    self.mask_frac * len(vmask_indices))
+        highest_editor_tok_indices = []
+        for idx in vmask_indices:
+            if idx not in highest_editor_tok_indices:
+                highest_editor_tok_indices.append(idx)
+                if len(highest_editor_tok_indices) == num_return_toks:
+                    break
+        return highest_editor_tok_indices
+
 class RandomMasker(Masker):
     """ Masks randomly chosen spans. """ 
     
@@ -169,6 +289,8 @@ class RandomMasker(Masker):
         num_tokens = min(self.max_tokens, len(editor_toks))
         return random.sample(
                 range(num_tokens), math.ceil(self.mask_frac * num_tokens))
+
+
     
 class GradientMasker(Masker):
     """ Masks spans based on gradients of Predictor wrt. given predicted label.

@@ -155,9 +155,10 @@ class BasicClassifier(Model):
 
 
         p = self.maskmodel.get_statistics_batch(embedded_text)
-        embedded_text = self.maskmodel(embedded_text, p, "train")
-        vmasked_data = embedded_text
-        print(vmasked_data)
+        embedded_text = self.maskmodel(embedded_text, p, self.training)
+
+        vmask_probs = F.softmax(p, dim=2)
+        vmask = torch.argmax(vmask_probs, dim=2)
 
         if self._seq2seq_encoder:
             embedded_text = self._seq2seq_encoder(embedded_text, mask=mask)
@@ -173,7 +174,7 @@ class BasicClassifier(Model):
         logits = self._classification_layer(embedded_text)
         probs = torch.nn.functional.softmax(logits, dim=-1)
 
-        output_dict = {"logits": logits, "probs": probs,"vmask":vmasked_data}
+        output_dict = {"logits": logits, "probs": probs,"vmask_probs":vmask_probs,"vmask":vmask}
         output_dict["token_ids"] = util.get_token_ids_from_text_field_tensors(tokens)
         if label is not None:
             loss = self._loss(logits, label.long().view(-1))
