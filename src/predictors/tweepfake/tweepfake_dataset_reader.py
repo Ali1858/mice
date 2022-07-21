@@ -60,7 +60,7 @@ class TweepfakeDatasetReader(DatasetReader):
         labels = [None] * len(df)
       
         for index,row in df.iterrows():
-          labels[index] = str(row['account.type'])
+          labels[index] = get_label(str(row['account.type']))
           strings[index] = clean_text(row['text'], special_chars=["<br />", "\t"])
 
         if return_labels:

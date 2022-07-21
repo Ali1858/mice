@@ -254,9 +254,9 @@ class VMasker(Masker):
         all_predic_toks = temp_tokenizer.tokenize(editable_seg)
 
         vmask_indices = [self._get_word_positions(
-            all_predic_toks[idx], editor_toks)[0] \
-                    for idx in vmask_indices \
-                    if all_predic_toks[idx] not in self.predictor_special_toks]
+            all_predic_toks[i], editor_toks)[0] \
+                    for i,idx in enumerate(vmask_indices) \
+                    if all_predic_toks[i] not in self.predictor_special_toks]
         print(vmask_indices)
         vmask_indices = [item for sublist in vmask_indices for item in sublist]
 
