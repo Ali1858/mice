@@ -53,7 +53,6 @@ class TweepfakeDatasetReader(DatasetReader):
             print("loading validation dataset for stage training")
             file_path = "src/predictors/tweepfake/validation.csv"
         df = pd.read_csv(file_path)
-        df = df[:10]      
         np.random.seed(self.random_seed)       
 
         strings = [None] * len(df)
@@ -75,7 +74,6 @@ class TweepfakeDatasetReader(DatasetReader):
        # else set filepath to tweepfake train csv
         
         df = pd.read_csv(file_path)
-        df = df[:10]       
         np.random.seed(self.random_seed)
            
         for index,row in df.iterrows():

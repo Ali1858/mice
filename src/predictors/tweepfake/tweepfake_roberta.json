@@ -36,8 +36,9 @@
     "test_data_path": "src/predictors/tweepfake/test.csv",
     "validation_data_path": "src/predictors/tweepfake/validation.csv",
     "trainer": {
-        "num_epochs": 3,
+        "num_epochs": 1,
         "validation_metric": "+accuracy",
+        "epoch_callbacks" : ["track_epoch_callback"],
 	 "learning_rate_scheduler": {
 	    "type": "slanted_triangular",
 	    "cut_frac": 0.06		

@@ -123,6 +123,7 @@ class BasicClassifier(Model):
         self._classification_layer = torch.nn.Linear(self._classifier_input_dim, self._num_labels)
         self._accuracy = CategoricalAccuracy()
         self._loss = torch.nn.CrossEntropyLoss()
+        self.beta = 1
         initializer(self)
 
     def forward(  # type: ignore
@@ -158,6 +159,11 @@ class BasicClassifier(Model):
         embedded_text = self.maskmodel(embedded_text, p, self.training)
 
         vmask_probs = F.softmax(p, dim=2)
+
+        probs_pos = F.softmax(p,dim=2)[:,:,1]
+        probs_neg = F.softmax(p,dim=2)[:,:,0]
+        self.infor_loss = torch.mean(probs_pos * torch.log(probs_pos+1e-8) + probs_neg*torch.log(probs_neg+1e-8))
+
         vmask = torch.argmax(vmask_probs, dim=2)
 
         if self._seq2seq_encoder:
@@ -176,8 +182,11 @@ class BasicClassifier(Model):
 
         output_dict = {"logits": logits, "probs": probs,"vmask_probs":vmask_probs,"vmask":vmask}
         output_dict["token_ids"] = util.get_token_ids_from_text_field_tensors(tokens)
+        print(self.beta)
         if label is not None:
             loss = self._loss(logits, label.long().view(-1))
+            if self.training:
+                loss = loss + (self.beta*self.infor_loss)
             output_dict["loss"] = loss
             self._accuracy(logits, label)
 
