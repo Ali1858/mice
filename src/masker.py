@@ -246,8 +246,20 @@ class VMasker(Masker):
 
     def _get_mask_indices(self, editable_seg, editor_toks, pred_idx,predictor_tok_end_idx, **kwargs):
         """ Helper function to get indices of Editor tokens to mask. """
+        
+        editor_mask_indices = self.get_important_editor_tokens(
+                editable_seg, pred_idx, editor_toks, predictor_tok_end_idx,**kwargs)
+        return editor_mask_indices 
+
+  
+    def get_important_editor_tokens(
+            self, editable_seg, pred_idx, editor_toks, predictor_tok_end_idx,
+            labeled_instance=None, 
+            predic_tok_start_idx=None, 
+            predic_tok_end_idx=None, 
+            num_return_toks=None):
+        """ Helper function to get indices of Editor tokens to mask. """
         # label or pred token id
-        print(editable_seg)
         vmask_indices = self.predictor.predict(editable_seg)['vmask']
 
         temp_tokenizer = self.predictor._dataset_reader._tokenizer
@@ -257,7 +269,6 @@ class VMasker(Masker):
             all_predic_toks[i], editor_toks)[0] \
                     for i,idx in enumerate(vmask_indices) \
                     if all_predic_toks[i] not in self.predictor_special_toks]
-        print(vmask_indices)
         vmask_indices = [item for sublist in vmask_indices for item in sublist]
 
 
