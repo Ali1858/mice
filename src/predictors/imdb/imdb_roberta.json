@@ -15,7 +15,7 @@
         }
     },
     "model": {
-        "type": "basic_classifier",
+        "type": "vmasker2_classifier",
         "namespace": "tags",
         "seq2vec_encoder": {
             "type": "bert_pooler",
@@ -42,7 +42,7 @@
 	},
         "optimizer": {
             "type": "huggingface_adamw",
-            "lr": 2e-05,
+            "lr": 1e-05,
             "weight_decay": 0.1
         }
     },
@@ -50,7 +50,7 @@
     "data_loader": {
         "batch_sampler": {
             "type": "bucket",
-            "batch_size": 8,
+            "batch_size": 4,
             "sorting_keys": [
                 "tokens"
             ]
