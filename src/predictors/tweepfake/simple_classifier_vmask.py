@@ -51,7 +51,7 @@ class VMASK(nn.Module):
         return p
 
 
-@Model.register("vmasker_classifier")
+@Model.register("vmasker2_classifier")
 class BasicClassifier(Model):
     """
     This `Model` implements a basic text classifier. After embedding the text into
