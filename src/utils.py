@@ -56,7 +56,7 @@ def get_shared_parsers():
 
     mask_parser = argparse.ArgumentParser()
     mask_parser.add_argument("-mask_type", default="grad", 
-            choices=["grad", "random"])
+            choices=["grad", "random","socmask"])
     mask_parser.add_argument("-grad_type", default="normal_l1", 
             choices=["integrated_l1", "integrated_signed", "normal_l1", \
                     "normal_signed", "normal_l2", "integrated_l2"],

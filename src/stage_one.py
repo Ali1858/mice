@@ -14,7 +14,7 @@ import json
 import sys
 
 # Local imports
-from src.masker import Masker, RandomMasker, GradientMasker
+from src.masker import Masker, RandomMasker, GradientMasker, SOCMasker
 from src.dataset import StageOneDataset, RaceStageOneDataset
 from src.utils import *
 
@@ -152,6 +152,10 @@ def get_stage_one_masker(args, predictor):
         masker = GradientMasker(None, editor_tokenizer_wrapper, predictor, 
                 args.model.model_max_length, grad_type=args.mask.grad_type,
                 sign_direction=sign_direction)
+    elif args.mask.mask_type == "socmask":
+        logger.info("Loading SOCMakser ...")
+        masker = SOCMasker(None, editor_tokenizer_wrapper, predictor, 
+                args.model.model_max_length,)
     logger.info("Done.")
     return masker
 
@@ -165,6 +169,7 @@ def get_task_data(args, dr):
     elif args.meta.task == "newsgroups" or args.meta.task == "imdb" or args.meta.task == "tweepfake":
         strings, labels = dr.get_inputs('train', return_labels=True)
     
+    # train-val split
     string_indices = np.array(range(len(strings)))
     np.random.shuffle(string_indices)
     num_train = math.ceil(args.train.data_split_ratio * len(strings))
@@ -188,6 +193,7 @@ def run_train_editor(predictor, dr, args):
     np.random.seed(args.train.seed)
     torch.backends.cudnn.deterministic = True
 
+    # load editor model
     editor_tokenizer, editor_model = load_base_t5(
             max_length=args.model.model_max_length)
     device = get_device()
@@ -229,7 +235,7 @@ def run_train_editor(predictor, dr, args):
     optim = torch.optim.Adam(params=editor_model.parameters(), \
             lr=args.train.lr)
 
-    # Load original task data
+    # Load original task data (classification dataset and not stage one training dataset)
     train_inputs, val_inputs, train_labels, val_labels = \
             get_task_data(args, dr)
 

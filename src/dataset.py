@@ -78,13 +78,15 @@ class StageOneDataset(Dataset):
         for i, (orig_inp, orig_label) in tqdm(iterator, total=len(orig_inputs)):
             masker.mask_frac = np.random.choice(mask_fracs, 1, 
                     p=mask_frac_probs)[0] 
-
+            ## predict the label using original input
             pred = predictor.predict(orig_inp)
             pred_label = pred['label']
 
+            ## based on parameter choose which label to use for training stage one. 
             label_to_use = pred_label if target_label == "pred" else orig_label
             label_idx = labels_to_ints[label_to_use]
 
+            ## predictor tokenized. note: predictor and editor tokenized are two different input
             predictor_tokenized = get_predictor_tokenized(predictor, orig_inp)
           
             try:

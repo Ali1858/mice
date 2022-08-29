@@ -47,8 +47,12 @@ class TweepfakeDatasetReader(DatasetReader):
 
        # if file_path is 'test' set filepath to tweepfake test csv   
        # else set filepath to tweepfake train csv
-        
-        df = pd.read_csv(file_path)       
+        if file_path == "train":
+            file_path = "src/predictors/tweepfake/train.csv"
+        else:
+            print("loading validation dataset for stage training")
+            file_path = "src/predictors/tweepfake/validation.csv"
+        df = pd.read_csv(file_path)
         np.random.seed(self.random_seed)       
 
         strings = [None] * len(df)
@@ -69,12 +73,11 @@ class TweepfakeDatasetReader(DatasetReader):
        # if file_path is 'test' set filepath to tweepfake test csv   
        # else set filepath to tweepfake train csv
         
-        df = pd.read_csv(file_path)       
+        df = pd.read_csv(file_path)
         np.random.seed(self.random_seed)
            
         for index,row in df.iterrows():
           label = get_label(str(row['account.type']))
-          print(label)
           yield self.text_to_instance(
                     clean_text(row['text'], special_chars=["<br />", "\t"]), 
                     label)
