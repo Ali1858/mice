@@ -172,25 +172,79 @@ class SOCMasker(Masker):
         self.predictor = predictor
 
 
-    def get_soc_masked_indices(self,editable_seg,predictor_tokenizer,predictor, ):
-        origianl_logits = predictor.predict(editable_seg)["logits"]
-        orignal_pos, original_neg = origianl_logits[:,:,1], origianl_logits[:,:,0]
-        tokenized_input = predictor_tokenizer.tokenize(editable_seg)
+    def extent_with_subtoken_id(self,filtered_token_idx,all_token_idx):
+        extend_idxs = []    
+        for idx in filtered_token_idx:
+            extend_idxs.extend(all_token_idx[idx])
+        return extend_idxs
+
+
+    def filter_tokens(self,tokens, importance_scores, p=0.7):    
+        score_sum = 0
+        filtered_token_id = []
+        for tokens_idx in tokens:
+            if score_sum < p:
+                filtered_token_id.append(tokens_idx)
+                score_sum += importance_scores[tokens_idx]
+        return filtered_token_id
+
+
+    def merge_subtokens(self,tokens):
+        tokens_idx = []
+        new_tokens = []
+        for idx, token in enumerate(tokens):
+            if token.startswith('Ġ') or idx == 1:
+                tokens_idx.append([idx])
+                new_tokens.append(token)
+            elif idx == 0 or token in ["</s>",'ĉ']:
+                tokens_idx.append([idx])
+                new_tokens.append(token)
+            elif idx > 1:
+                last_idx = len(tokens_idx) -1
+                tokens_idx[last_idx].append(idx)
+                new_tokens[last_idx] = new_tokens[last_idx]+token
+        assert len(new_tokens) == len(tokens_idx)
+        return new_tokens, tokens_idx
+
+
+        
+    def get_soc_masked_indices(self,editable_seg,predictor,merge_subtoken=True, nb_range=2):
+        original_prediction = predictor.predict(editable_seg)
+        origianl_logits = original_prediction["logits"]
+        orignal_pos, original_neg = origianl_logits[1], origianl_logits[0]
+        tokens = original_prediction["tokens"]
+
+        if merge_subtoken:
+            new_tokens,tokens_idx = self.merge_subtokens(tokens)
+        else:
+            new_tokens = tokens
+            tokens_idx = [[idx] for idx in range(len(tokens))]
         
         word_importance = []
-        for idx, token in enumerate(tokenized_input):
-            if True: #place holder for filters
-                after_removed = copy.deepcopy(tokenized_input[:idx])
-                after_removed.extend(tokenized_input[idx+1:])
-                masked_input = predictor_tokenizer.join(after_removed)
+        for idx, token in enumerate(new_tokens):
+            if token not in ["<s>", "</s>","<unk>","<s>,</s>","<pad>"]: #place holder for filters
+
+                start = max(idx-nb_range,1) if nb_range is not None and nb_range >= 1 else idx
+                end = min(idx+nb_range,len(token)-2) if nb_range else idx
+                
+                
+                after_removed = copy.deepcopy(new_tokens[:start])
+                after_removed.extend([" <pad>"]+new_tokens[end+1:])
+
+                masked_input = ''.join([token.replace('Ġ',' ').replace('ĉ',' ') for token in after_removed[1:-1]])
                 logits = predictor.predict(masked_input)["logits"]
-                pos, neg = logits[:,:,1], logits[:,:,0]
+                pos, neg = logits[1], logits[0]
                 delta = orignal_pos-pos
-                word_importance.append(delta.abs().mean())
+                word_importance.append(abs(delta))
             else:
                 word_importance.append(0)
+        normalize_word_importance =  [ importance/sum(word_importance) if importance !=0 else 0 for importance in word_importance]
+        sorted_word_importance = np.argsort(normalize_word_importance)[::-1]
 
+        filtered_token_idx = self.filter_tokens(sorted_word_importance, normalize_word_importance, p=0.7)
 
+        extent_token_id = self.extent_with_subtoken_id(filtered_token_idx,tokens_idx) if merge_subtoken else filtered_token_idx
+        return extent_token_id
 
 
     def _get_word_positions(self, predic_tok, editor_toks):
@@ -286,12 +340,12 @@ class SOCMasker(Masker):
        
         predictor_tokenizer = self.predictor._dataset_reader._tokenizer
         all_predic_toks = predictor_tokenizer.tokenize(editable_seg)
-        masked_indices = get_soc_masked_indices(editable_seg,predictor_tokenizer,self.predictor)
+        soc_masked_indices = self.get_soc_masked_indices(editable_seg,self.predictor)
 
         masked_indices = [self._get_word_positions(
-            all_predic_toks[i], editor_toks)[0] \
-                    for i,idx in enumerate(masked_indices) \
-                    if all_predic_toks[i] not in self.predictor_special_toks]
+            all_predic_toks[idx], editor_toks)[0] \
+                    for idx in soc_masked_indices \
+                    if all_predic_toks[idx] not in self.predictor_special_toks]
         masked_indices = [item for sublist in masked_indices for item in sublist]
 
 
