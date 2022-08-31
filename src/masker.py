@@ -170,6 +170,15 @@ class SOCMasker(Masker):
         super().__init__(mask_frac, editor_tok_wrapper, max_tokens)
 
         self.predictor = predictor
+        temp_tokenizer = self.predictor._dataset_reader._tokenizer
+
+        # Used later to avoid skipping special tokens like <s>
+        self.predictor_special_toks = \
+                temp_tokenizer.sequence_pair_start_tokens + \
+                temp_tokenizer.sequence_pair_mid_tokens + \
+                temp_tokenizer.sequence_pair_end_tokens + \
+                temp_tokenizer.single_sequence_start_tokens + \
+                temp_tokenizer.single_sequence_end_tokens
 
 
     def extent_with_subtoken_id(self,filtered_token_idx,all_token_idx):
@@ -225,7 +234,7 @@ class SOCMasker(Masker):
             if token not in ["<s>", "</s>","<unk>","<s>,</s>","<pad>"]: #place holder for filters
 
                 start = max(idx-nb_range,1) if nb_range is not None and nb_range >= 1 else idx
-                end = min(idx+nb_range,len(token)-2) if nb_range else idx
+                end = min(idx+nb_range,len(new_tokens)-2) if nb_range else idx
                 
                 
                 after_removed = copy.deepcopy(new_tokens[:start])

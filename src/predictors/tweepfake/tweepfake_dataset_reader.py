@@ -19,7 +19,7 @@ import tarfile
 import numpy as np
 import math
 
-from src.predictors.predictor_utils import clean_text 
+from src.predictors.predictor_utils import clean_text , fake_tweep_clean
 logger = logging.getLogger(__name__)
 
 def get_label(label):
@@ -52,16 +52,18 @@ class TweepfakeDatasetReader(DatasetReader):
         else:
             print("loading validation dataset for stage training")
             file_path = "src/predictors/tweepfake/validation.csv"
-        df = pd.read_csv(file_path)
+        df = pd.read_csv(file_path,encoding="utf-8")
         np.random.seed(self.random_seed)       
 
         strings = [None] * len(df)
         labels = [None] * len(df)
       
         for index,row in df.iterrows():
-          labels[index] = get_label(str(row['account.type']))
-          strings[index] = clean_text(row['text'], special_chars=["<br />", "\t"])
-
+            text = fake_tweep_clean(row['text'], special_chars=["\r\n","\n","\t"])
+            if text is not None and len(text.split()) >= 5:
+                labels[index] = get_label(str(row['account.type']))
+                strings[index] = text
+          
         if return_labels:
             return strings, labels
         return strings  
@@ -73,14 +75,14 @@ class TweepfakeDatasetReader(DatasetReader):
        # if file_path is 'test' set filepath to tweepfake test csv   
        # else set filepath to tweepfake train csv
         
-        df = pd.read_csv(file_path)
+        df = pd.read_csv(file_path,encoding="utf-8")
         np.random.seed(self.random_seed)
            
         for index,row in df.iterrows():
           label = get_label(str(row['account.type']))
-          yield self.text_to_instance(
-                    clean_text(row['text'], special_chars=["<br />", "\t"]), 
-                    label)
+          text = fake_tweep_clean(row['text'], special_chars=["\r\n","\n","\t"]),
+          if text is not None and len(text.split()) >= 5:
+            yield self.text_to_instance(text, label)
 
 
     def text_to_instance(

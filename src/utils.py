@@ -33,7 +33,7 @@ from src.predictors.race.race_dataset_reader import RaceDatasetReader
 
 from src.predictors.tweepfake.tweepfake_dataset_reader import TweepfakeDatasetReader
 
-from src.masker import Masker, RandomMasker, GradientMasker
+# from src.masker import Masker, RandomMasker, GradientMasker
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
