@@ -44,7 +44,7 @@
 	},
         "optimizer": {
             "type": "huggingface_adamw",
-            "lr": 2e-05,
+            "lr": 1e-05,
             "weight_decay": 0.1
         }
     },

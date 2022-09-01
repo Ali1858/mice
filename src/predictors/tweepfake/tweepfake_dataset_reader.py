@@ -80,7 +80,7 @@ class TweepfakeDatasetReader(DatasetReader):
            
         for index,row in df.iterrows():
           label = get_label(str(row['account.type']))
-          text = fake_tweep_clean(row['text'], special_chars=["\r\n","\n","\t"]),
+          text = fake_tweep_clean(row['text'], special_chars=["\r\n","\n","\t"])
           if text is not None and len(text.split()) >= 5:
             yield self.text_to_instance(text, label)
 

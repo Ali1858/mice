@@ -188,7 +188,7 @@ class SOCMasker(Masker):
         return extend_idxs
 
 
-    def filter_tokens(self,tokens, importance_scores, p=0.7):    
+    def filter_tokens(self,tokens, importance_scores, p=1):    
         score_sum = 0
         filtered_token_id = []
         for tokens_idx in tokens:
@@ -349,7 +349,7 @@ class SOCMasker(Masker):
        
         predictor_tokenizer = self.predictor._dataset_reader._tokenizer
         all_predic_toks = predictor_tokenizer.tokenize(editable_seg)
-        soc_masked_indices = self.get_soc_masked_indices(editable_seg,self.predictor)
+        soc_masked_indices = self.get_soc_masked_indices(editable_seg,self.predictor,nb_range=None)
 
         masked_indices = [self._get_word_positions(
             all_predic_toks[idx], editor_toks)[0] \

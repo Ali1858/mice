@@ -3,6 +3,7 @@ import emoji
 
 
 def clean_text(text, special_chars=["\n", "\t"]):
+    text = "\n".join(text.splitlines())
     for char in special_chars:
         text = text.replace(char, " ")
     text = re.sub(r'http\S+|www\S+', '', text)
@@ -18,8 +19,11 @@ def fake_tweep_clean(text, special_chars=["\n", "\t"]):
         text_ = re.sub(r"U\+[0-9A-F]+", emojize, text)
     except Exception as e:
         return None
+    if "id=" in text_ and "src=" in text_:
+        return None
     text_ =  emoji.demojize(text_,language="alias",delimiters=("",""))
-    text_ = text_.replace("“",'"').replace("”",'"').replace("’’","'").replace("…","...")
-    text_ = text_.replace('Ã¯Â¿Â½',"'").replace("âĢľ",'"').replace("âĢĻ","'")
+    text_ = text_.replace("“",'"').replace("”",'"').replace("’’","'").replace("’","'").replace("‘","'").replace("…","...").replace("<>","")
+    text_ = text_.replace('Ã¯Â¿Â½',"'").replace("âĢľ",'"').replace("âĢĻ","'").replace("ï¿½","'")
+    
 
-    return " ".join(text_.split(" "))
+    return " ".join(text_.split())
