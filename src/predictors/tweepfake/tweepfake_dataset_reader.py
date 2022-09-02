@@ -63,6 +63,13 @@ class TweepfakeDatasetReader(DatasetReader):
             if text is not None and len(text.split()) >= 5:
                 labels[index] = get_label(str(row['account.type']))
                 strings[index] = text
+            else:
+                strings[index] = None
+                labels[index] = None
+
+        strings = [x for x in strings if x is not None]
+        labels = [x for x in labels if x is not None]
+        assert len(strings) == len(labels)
           
         if return_labels:
             return strings, labels

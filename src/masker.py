@@ -171,6 +171,7 @@ class SOCMasker(Masker):
 
         self.predictor = predictor
         temp_tokenizer = self.predictor._dataset_reader._tokenizer
+        self.exclude_tokens = ['"',".",",","'",'(',')','?']
 
         # Used later to avoid skipping special tokens like <s>
         self.predictor_special_toks = \
@@ -181,28 +182,11 @@ class SOCMasker(Masker):
                 temp_tokenizer.single_sequence_end_tokens
 
 
-    def extent_with_subtoken_id(self,filtered_token_idx,all_token_idx):
-        extend_idxs = []    
-        for idx in filtered_token_idx:
-            extend_idxs.extend(all_token_idx[idx])
-        return extend_idxs
-
-
-    def filter_tokens(self,tokens, importance_scores, p=1):    
-        score_sum = 0
-        filtered_token_id = []
-        for tokens_idx in tokens:
-            if score_sum < p:
-                filtered_token_id.append(tokens_idx)
-                score_sum += importance_scores[tokens_idx]
-        return filtered_token_id
-
-
     def merge_subtokens(self,tokens):
         tokens_idx = []
         new_tokens = []
         for idx, token in enumerate(tokens):
-            if token.startswith('Ġ') or idx == 1:
+            if token in self.exclude_tokens or token.startswith('Ġ') or idx == 1:
                 tokens_idx.append([idx])
                 new_tokens.append(token)
             elif idx == 0 or token in ["</s>",'ĉ']:
@@ -219,8 +203,8 @@ class SOCMasker(Masker):
         
     def get_soc_masked_indices(self,editable_seg,predictor,merge_subtoken=True, nb_range=2):
         original_prediction = predictor.predict(editable_seg)
-        origianl_logits = original_prediction["logits"]
-        orignal_pos, original_neg = origianl_logits[1], origianl_logits[0]
+        original_logits = original_prediction["logits"]
+        original_label = int(original_prediction["label"])
         tokens = original_prediction["tokens"]
 
         if merge_subtoken:
@@ -231,29 +215,33 @@ class SOCMasker(Masker):
         
         word_importance = []
         for idx, token in enumerate(new_tokens):
-            if token not in ["<s>", "</s>","<unk>","<s>,</s>","<pad>"]: #place holder for filters
+            if token.replace('Ġ','') not in ["<s>", "</s>","<unk>","<s>,</s>","<pad>"].extend(self.exclude_tokens):
 
-                start = max(idx-nb_range,1) if nb_range is not None and nb_range >= 1 else idx
-                end = min(idx+nb_range,len(new_tokens)-2) if nb_range else idx
-                
-                
+                start = max(idx-nb_range,1) if nb_range is not None and nb_range >= 1 else idx #ignore start token <s>
+                end = min(idx+nb_range,len(new_tokens)-2) if nb_range else idx #ignore end token </s>
+
                 after_removed = copy.deepcopy(new_tokens[:start])
-                after_removed.extend([" <pad>"]+new_tokens[end+1:])
+                after_removed.extend(["<pad>"]+new_tokens[end+1:])
 
                 masked_input = ''.join([token.replace('Ġ',' ').replace('ĉ',' ') for token in after_removed[1:-1]])
-                logits = predictor.predict(masked_input)["logits"]
-                pos, neg = logits[1], logits[0]
-                delta = orignal_pos-pos
-                word_importance.append(abs(delta))
+                prediction = predictor.predict(masked_input)
+                logits = prediction["logits"]
+                if int(prediction["label"]) == original_label:
+                    delta = logits[original_label]-original_logits[original_label]
+                    word_importance.append(delta)
+                else:
+                    word_importance.append(-99)
             else:
-                word_importance.append(0)
-        normalize_word_importance =  [ importance/sum(word_importance) if importance !=0 else 0 for importance in word_importance]
-        sorted_word_importance = np.argsort(normalize_word_importance)[::-1]
+                word_importance.append(-99)
+        sorted_word_importance = np.argsort(word_importance)[::-1]
+        
+        extended_idx = []
+        importance_ = []
+        for idx in sorted_word_importance:
+            extended_idx.extend(tokens_idx[idx])
+            importance_.extend([word_importance[idx]]*len(tokens_idx[idx]))
 
-        filtered_token_idx = self.filter_tokens(sorted_word_importance, normalize_word_importance, p=0.7)
-
-        extent_token_id = self.extent_with_subtoken_id(filtered_token_idx,tokens_idx) if merge_subtoken else filtered_token_idx
-        return extent_token_id
+        return extended_idx
 
 
     def _get_word_positions(self, predic_tok, editor_toks):

@@ -10,3 +10,4 @@ overrides==3.1.0
 transformers==3.5.0
 more_itertools==8.4.0
 scikit_learn==0.24.2
+emoji
