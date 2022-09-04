@@ -215,7 +215,10 @@ class SOCMasker(Masker):
         
         word_importance = []
         for idx, token in enumerate(new_tokens):
-            if token.replace('Ġ','') not in ["<s>", "</s>","<unk>","<s>,</s>","<pad>"].extend(self.exclude_tokens):
+
+            filter_token_list = ["<s>", "</s>","<unk>","<s>,</s>","<pad>"]
+            filter_token_list.extend(self.exclude_tokens)
+            if token.replace('Ġ','') not in filter_token_list:
 
                 start = max(idx-nb_range,1) if nb_range is not None and nb_range >= 1 else idx #ignore start token <s>
                 end = min(idx+nb_range,len(new_tokens)-2) if nb_range else idx #ignore end token </s>

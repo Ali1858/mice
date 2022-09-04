@@ -38,6 +38,7 @@ from src.predictors.tweepfake.tweepfake_dataset_reader import TweepfakeDatasetRe
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
+t5_model_type = "t5-small"
 ####################################################################
 ######################## Arg Parsing Utils #########################
 ####################################################################
@@ -235,10 +236,10 @@ def load_predictor(task, predictor_folder="trained_predictors/"):
 ####################################################################
 
 def load_base_t5(max_length=700):
-    t5_config = T5Config.from_pretrained("t5-base", n_positions=max_length)
-    model = T5ForConditionalGeneration.from_pretrained("t5-base", 
+    t5_config = T5Config.from_pretrained(t5_model_type, n_positions=max_length)
+    model = T5ForConditionalGeneration.from_pretrained(t5_model_type, 
             config=t5_config)
-    tokenizer = T5TokenizerFast.from_pretrained("t5-base", truncation=True)
+    tokenizer = T5TokenizerFast.from_pretrained(t5_model_type, truncation=True)
     return tokenizer, model
 
 def get_device():

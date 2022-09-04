@@ -140,7 +140,7 @@ def get_stage_one_masker(args, predictor):
 
     logger.info(f"Creating masker of type: {args.mask.mask_type}")
     editor_tokenizer_wrapper = PretrainedTransformerTokenizer(
-            "t5-base", max_length=args.model.model_max_length)
+            t5_model_type, max_length=args.model.model_max_length)
     if args.mask.mask_type == "random":
         logger.info("Loading Random masker...")
         masker = RandomMasker(None, editor_tokenizer_wrapper, 
@@ -233,7 +233,7 @@ def run_train_editor(predictor, dr, args):
         }
 
     optim = torch.optim.Adam(params=editor_model.parameters(), \
-            lr=args.train.lr)
+            lr=args.train.lr,weight_decay=0.01)
 
     # Load original task data (classification dataset and not stage one training dataset)
     train_inputs, val_inputs, train_labels, val_labels = \

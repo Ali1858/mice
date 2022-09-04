@@ -78,21 +78,29 @@ def load_models(args):
     logger.info("Loading models...")
     predictor = load_predictor(args.meta.task)
     editor_tokenizer_wrapper = PretrainedTransformerTokenizer(
-            't5-base', max_length=args.model.model_max_length)
+            t5_model_type, max_length=args.model.model_max_length)
     editor_tokenizer, editor_model = load_base_t5(
                        max_length=args.model.model_max_length)
     device = get_device()
     editor_model = load_editor_weights(editor_model, args.meta.editor_path)
     editor_model = editor_model.to(device)
-    
-    sign_direction = get_grad_sign_direction(
-            args.mask.grad_type, args.misc.grad_pred) 
-    
-    masker = GradientMasker(args.search.max_mask_frac, 
-            editor_tokenizer_wrapper, predictor, 
-            args.model.model_max_length,
-            grad_type=args.mask.grad_type, 
-            sign_direction=sign_direction)
+
+    if args.mask.mask_type == "grad":
+        logger.info("Loading Gradient Masker...")
+        # In stage 1, if signed gradients, mask tokens pushing *towards* target
+        sign_direction = get_grad_sign_direction(
+                args.mask.grad_type, args.misc.grad_pred) 
+
+        masker = GradientMasker(args.search.max_mask_frac, editor_tokenizer_wrapper, predictor, 
+                args.model.model_max_length, grad_type=args.mask.grad_type,
+                sign_direction=sign_direction)
+    elif args.mask.mask_type == "socmask":
+        logger.info("Loading SOCMakser ...")
+        masker = SOCMasker(args.search.max_mask_frac, editor_tokenizer_wrapper, predictor, 
+                args.model.model_max_length,)
+    else:
+        raise Exception
+
 
     if "race" in args.meta.task:
         editor = RaceEditor(editor_tokenizer_wrapper, editor_tokenizer, 
