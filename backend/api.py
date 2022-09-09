@@ -1,6 +1,7 @@
 from src.utils import get_args,logger,wrap_text
 from src.stage_two import load_models
 from src.edit_finder import EditFinder, EditEvaluator
+from src.predictors.predictor_utils import fake_tweep_clean
 import numpy as np
 from tqdm import tqdm
 import torch
@@ -26,7 +27,7 @@ def predict(task,input_sentence):
             search_method=args.search.search_method,
             max_search_levels=args.search.max_search_levels)
 
-    _text = clean_text(input_sentence)
+    _text = fake_tweep_clean(input_sentence)
     inputs = [_text]
 
     np.random.seed(0)
@@ -72,32 +73,11 @@ def predict(task,input_sentence):
 
 
 
-def remove(text, special_chars=["\n", "\t"]):
-    text = "\n".join(text.splitlines())
-    for char in special_chars:
-        text = text.replace(char, " ")
-    text = re.sub(r'http\S+|www\S+', '', text)
-    return text
 
 
 
-def emojize(match):
-    return chr(int(match.group(0)[2:], 16))
+
    
 
 
 
-def clean_text(text, special_chars=["\n", "\t"]):
-    text = remove(text,special_chars)
-    try:
-        text_ = re.sub(r"U\+[0-9A-F]+", emojize, text)
-    except Exception as e:
-        return None
-    if "id=" in text_ and "src=" in text_:
-        return None
-    text_ =  emoji.demojize(text_,language="alias",delimiters=("",""))
-    text_ = text_.replace("“",'"').replace("”",'"').replace("’’","'").replace("’","'").replace("‘","'").replace("…","...").replace("<>","")
-    text_ = text_.replace('Ã¯Â¿Â½',"'").replace("âĢľ",'"').replace("âĢĻ","'").replace("ï¿½","'")
-    
-
-    return " ".join(text_.split())
