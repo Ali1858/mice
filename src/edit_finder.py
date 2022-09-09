@@ -118,7 +118,9 @@ def get_scores(predictor, instance_candidates, contrast_pred_idx, k = None):
         pred_indices = torch.argmax(probs, dim=1)
 
         # Compute this only for remaining
-        contrast_pred_tensor = torch.tensor([contrast_pred_idx]).cuda()
+        #contrast_pred_tensor = torch.tensor([contrast_pred_idx]).cuda()
+        
+        contrast_pred_tensor = torch.tensor([contrast_pred_idx])
         bool_equal = (pred_indices == contrast_pred_tensor)
         pred_is_contrast_indices = bool_equal.reshape(-1).nonzero().reshape(-1)
         
