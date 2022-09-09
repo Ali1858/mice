@@ -236,11 +236,12 @@ def load_predictor(task, predictor_folder="trained_predictors/"):
 ####################################################################
 
 def load_base_t5(max_length=700):
-    t5_config = T5Config.from_pretrained(t5_model_type, n_positions=max_length)
-    model = T5ForConditionalGeneration.from_pretrained(t5_model_type, 
+    t5_config = T5Config.from_pretrained("t5-base", n_positions=max_length)
+    model = T5ForConditionalGeneration.from_pretrained("t5-base", 
             config=t5_config)
-    tokenizer = T5TokenizerFast.from_pretrained(t5_model_type, truncation=True)
+    tokenizer = T5TokenizerFast.from_pretrained("t5-base", truncation=True)
     return tokenizer, model
+
 
 def get_device():
     return 'cuda' if torch.cuda.is_available() else 'cpu'
