@@ -135,7 +135,7 @@ def get_datasets(predictor, dr, masker, data_dir, train_inputs, val_inputs,
 
     return train_dataset, val_dataset
 
-def get_stage_one_masker(args, predictor):
+def get_stage_one_masker(args, predictor,dr):
     """ Helper function for loading appropriate masker, random or grad """
 
     logger.info(f"Creating masker of type: {args.mask.mask_type}")
@@ -144,18 +144,18 @@ def get_stage_one_masker(args, predictor):
     if args.mask.mask_type == "random":
         logger.info("Loading Random masker...")
         masker = RandomMasker(None, editor_tokenizer_wrapper, 
-                args.model.model_max_length)
+                args.model.model_max_length,dr)
     elif args.mask.mask_type == "grad":
         logger.info("Loading Gradient Masker...")
         # In stage 1, if signed gradients, mask tokens pushing *towards* target
         sign_direction = 1 if "signed" in args.mask.grad_type else None 
         masker = GradientMasker(None, editor_tokenizer_wrapper, predictor, 
-                args.model.model_max_length, grad_type=args.mask.grad_type,
+                args.model.model_max_length, dr,grad_type=args.mask.grad_type,
                 sign_direction=sign_direction)
     elif args.mask.mask_type == "socmask":
         logger.info("Loading SOCMakser ...")
         masker = SOCMasker(None, editor_tokenizer_wrapper, predictor, 
-                args.model.model_max_length,)
+                args.model.model_max_length,dr)
     logger.info("Done.")
     return masker
 
@@ -217,7 +217,7 @@ def run_train_editor(predictor, dr, args):
     args_path = os.path.join(stage_one_dir, "stage_one_args.json")
     write_args(args_path, args)
 
-    masker = get_stage_one_masker(args, predictor)
+    masker = get_stage_one_masker(args, predictor,dr)
 
     # Defining the parameters for creation of dataloaders
     train_params = {
