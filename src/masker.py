@@ -202,12 +202,12 @@ class SOCMasker(Masker):
         return new_tokens, tokens_idx
 
 
-    def get_importance(self,original_logits,original_label,prediction,special_delta):
+    def get_importance(self,original_logits,original_label,prediction,delta_multiplier):
         logits = prediction["logits"]
+        delta = logits[original_label]-original_logits[original_label]
         if int(prediction["label"]) == original_label:
-            delta = logits[original_label]-original_logits[original_label]
             return delta
-        return special_delta
+        return delta_multiplier*delta
 
     def batch(self,iterable, n=128):
         l = len(iterable)
@@ -215,7 +215,7 @@ class SOCMasker(Masker):
             yield iterable[ndx:min(ndx + n, l)]
 
 
-    def get_soc_masked_indices(self,editable_seg,predictor,merge_subtoken=True, nb_range=2,special_delta=-99):
+    def get_soc_masked_indices(self,editable_seg,predictor,merge_subtoken=True, nb_range=2,delta_multiplier=0.5):
         original_prediction = predictor.predict(editable_seg)
         original_logits = original_prediction["logits"]
         original_label = int(original_prediction["label"])
@@ -227,7 +227,7 @@ class SOCMasker(Masker):
             new_tokens = tokens
             tokens_idx = [[idx] for idx in range(len(tokens))]
         
-        word_importance = [special_delta]*len(new_tokens)
+        word_importance = [-99]*len(new_tokens)
         imp_words_idx = []
         inputs = []
         for idx, token in enumerate(new_tokens):
@@ -247,11 +247,11 @@ class SOCMasker(Masker):
                 imp_words_idx.append(idx)
         
         predictions = []
-        for x in self.batch(inputs, 326):
-            predictions.extend(predictor.predict_batch_instance(inputs))
+        for x in self.batch(inputs, 286):
+            predictions.extend(predictor.predict_batch_instance(x))
 
         for prediction,word_idx in zip(predictions,imp_words_idx):
-            delta = self.get_importance(original_logits,original_label,prediction,special_delta)
+            delta = self.get_importance(original_logits,original_label,prediction,delta_multiplier)
             word_importance[word_idx] = delta
         sorted_word_importance = np.argsort(word_importance)[::-1]
         
