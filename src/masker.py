@@ -209,7 +209,12 @@ class SOCMasker(Masker):
             return delta
         return special_delta
 
-        
+    def batch(self,iterable, n=128):
+        l = len(iterable)
+        for ndx in range(0, l, n):
+            yield iterable[ndx:min(ndx + n, l)]
+
+
     def get_soc_masked_indices(self,editable_seg,predictor,merge_subtoken=True, nb_range=2,special_delta=-99):
         original_prediction = predictor.predict(editable_seg)
         original_logits = original_prediction["logits"]
@@ -240,8 +245,11 @@ class SOCMasker(Masker):
                 masked_input = ''.join([token.replace('Ġ',' ').replace('ĉ',' ') for token in after_removed[1:-1]])
                 inputs.append(self.dr.text_to_instance(masked_input))
                 imp_words_idx.append(idx)
+        
+        predictions = []
+        for x in self.batch(inputs, 326):
+            predictions.extend(predictor.predict_batch_instance(inputs))
 
-        predictions = predictor.predict_batch_instance(inputs)
         for prediction,word_idx in zip(predictions,imp_words_idx):
             delta = self.get_importance(original_logits,original_label,prediction,special_delta)
             word_importance[word_idx] = delta
