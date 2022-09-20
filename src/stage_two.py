@@ -30,6 +30,7 @@ from src.editor import Editor, RaceEditor
 from src.predictors.imdb.imdb_dataset_reader import ImdbDatasetReader
 from src.predictors.newsgroups.newsgroups_dataset_reader import NewsgroupsDatasetReader
 from src.predictors.race.race_dataset_reader import RaceDatasetReader
+from src.masker import Masker, RandomMasker, GradientMasker,SOCMasker
 
 logger = logging.getLogger("my-logger")
 FORMAT = "[%(filename)s:%(lineno)s - %(funcName)20s() ] %(message)s"
@@ -85,6 +86,8 @@ def load_models(args):
     editor_model = load_editor_weights(editor_model, args.meta.editor_path)
     editor_model = editor_model.to(device)
 
+    dr = get_dataset_reader(args.meta.task, predictor)
+
     if args.mask.mask_type == "grad":
         logger.info("Loading Gradient Masker...")
         # In stage 1, if signed gradients, mask tokens pushing *towards* target
@@ -92,12 +95,12 @@ def load_models(args):
                 args.mask.grad_type, args.misc.grad_pred) 
 
         masker = GradientMasker(args.search.max_mask_frac, editor_tokenizer_wrapper, predictor, 
-                args.model.model_max_length, grad_type=args.mask.grad_type,
+                args.model.model_max_length,dr, grad_type=args.mask.grad_type,
                 sign_direction=sign_direction)
     elif args.mask.mask_type == "socmask":
         logger.info("Loading SOCMakser ...")
         masker = SOCMasker(args.search.max_mask_frac, editor_tokenizer_wrapper, predictor, 
-                args.model.model_max_length,)
+                args.model.model_max_length,dr)
     else:
         raise Exception
 
