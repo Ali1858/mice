@@ -36,7 +36,7 @@
     "test_data_path": "src/predictors/tweepfake/test.csv",
     "validation_data_path": "src/predictors/tweepfake/validation.csv",
     "trainer": {
-        "num_epochs": 15,
+        "num_epochs": 12,
         "validation_metric": "+accuracy",
         "epoch_callbacks" : ["track_epoch_callback"],
 	 "learning_rate_scheduler": {
