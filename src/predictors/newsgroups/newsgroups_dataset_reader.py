@@ -67,6 +67,11 @@ class NewsgroupsDatasetReader(DatasetReader):
     def get_inputs(self, subset, return_labels = False):
         np.random.seed(self.random_seed)
         data_indices, newsgroups_data = self.get_data_indices(subset)
+        np.random.shuffle(data_indices)
+        if "train" in subset:
+            data_indices = data_indices[:1000]
+        else:
+            data_indices = data_indices
         strings = [None] * len(data_indices)
         labels = [None] * len(data_indices)
         for i, idx in enumerate(data_indices):
@@ -92,7 +97,12 @@ class NewsgroupsDatasetReader(DatasetReader):
     @overrides
     def _read(self, subset):
         np.random.seed(self.random_seed)
-        data_indices = self.get_data_indices(subset)
+        data_indices,newsgroups_data = self.get_data_indices(subset)
+        np.random.shuffle(data_indices)
+        if "train" in subset:
+            data_indices = data_indices[:1000]
+        else:
+            data_indices = data_indices
         for idx in data_indices:
             txt = newsgroups_data.data[idx]
             topic = newsgroups_data.target[idx]

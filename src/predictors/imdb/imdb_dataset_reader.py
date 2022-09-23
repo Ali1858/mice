@@ -94,6 +94,13 @@ class ImdbDatasetReader(DatasetReader):
         np.random.seed(self.random_seed)
         
         path_lst = list(self.get_path(file_path))
+        np.random.shuffle(path_lst)
+
+        if "train" in file_path:
+            path_lst = path_lst[:1000]
+        else:
+            path_lst = path_lst[:500]
+
         strings = [None] * len(path_lst)
         labels = [None] * len(path_lst)
         for i, p in enumerate(path_lst):
@@ -114,6 +121,12 @@ class ImdbDatasetReader(DatasetReader):
                 not (cache_dir / self.TEST_DIR).exists():
             tf.extractall(cache_dir)
         path = self.get_path(file_path)
+        np.random.shuffle(path)
+
+        if "train" in file_path:
+            path = path[:1000]
+        else:
+            path = path[:500]
         for p in path:
             label = get_label(str(p))
             yield self.text_to_instance(
