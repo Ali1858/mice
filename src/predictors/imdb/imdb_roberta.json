@@ -36,7 +36,7 @@
     "test_data_path": "test",
     "validation_data_path": "test",
     "trainer": {
-        "num_epochs": 30,
+        "num_epochs": 7,
         "validation_metric": "+accuracy",
         "epoch_callbacks" : ["track_epoch_callback"],
 	 "learning_rate_scheduler": {

@@ -25,14 +25,11 @@ class VMASK(nn.Module):
         self.activation = self.activations["tanh"]#args.activation]
         self.embed_dim = 1024#args.embed_dim
         self.linear_layer = nn.Linear(self.embed_dim, self.mask_hidden_dim)
-        # self.linear_layer2 = nn.Linear(self.mask_hidden_dim, 64)
         self.hidden2p = nn.Linear(self.mask_hidden_dim, 2)
-        self.dropout = nn.Dropout(0.3)
+        self.dropout = nn.Dropout(0.1)
 
     def forward_sent_batch(self, embeds):
         temps = self.dropout(self.activation(self.linear_layer(embeds)))
-        # temps = self.linear_layer(embeds)
-        # temps2 = self.linear_layer2(temps)
         p = self.hidden2p(temps)  # bsz, seqlen, dim
         return p
 
@@ -109,10 +106,6 @@ class BasicClassifier(Model):
         self._feedforward = feedforward
         self.maskmodel = VMASK()
 
-        # parameters = filter(lambda p: p.requires_grad, self._text_field_embedder.parameters())
-        # for param in parameters:
-        #     param.requires_grad = False
-
         if feedforward is not None:
             self._classifier_input_dim = feedforward.get_output_dim()
         else:
@@ -132,15 +125,9 @@ class BasicClassifier(Model):
         self._classification_layer = torch.nn.Linear(self._classifier_input_dim, self._num_labels)
         self._accuracy = CategoricalAccuracy()
         self._loss = torch.nn.CrossEntropyLoss()
-        # self._info_loss = torch.nn.KLDivLoss()
-        self.beta = 1
+        self.beta = 0.19
         initializer(self)
         self.incoming_epoch = -1
-
-    def l1_penalty(params, l1_lambda=0.001):
-        """Returns the L1 penalty of the params."""
-        l1_norm = sum(p.abs().sum() for p in params)
-        return l1_lambda*l1_norm
 
 
     def forward(  # type: ignore
@@ -176,24 +163,12 @@ class BasicClassifier(Model):
 
         vmask_probs = F.softmax(p, dim=2)
 
-        p = torch.ones(vmask_probs.shape[-1],device=self.device)/ vmask_probs.shape[-1]
-        p = p.view(1, vmask_probs.shape[-1])
-        p_prior = p.expand(vmask_probs.shape)
-
-
-
         probs_pos = vmask_probs[:,:,1]
-        p_prior_pos = p_prior[:,:,1]
         probs_neg = vmask_probs[:,:,0]
-        p_prior_neg = p_prior[:,:,0]
-
-        # self.infor_loss = torch.mean(probs_pos * torch.log(p_prior_pos+1e-8) + probs_neg*torch.log(p_prior_neg+1e-8))
 
         self.infor_loss = torch.mean(probs_pos * torch.log(probs_pos+1e-8) + probs_neg*torch.log(probs_neg+1e-8))
-        # self.infor_loss = self.infor_loss + self.l1_penalty(self.maskmodel.linear_layer.parameters())
-        # self.infor_loss = self._info_loss(p,p_prior)
 
-        vmask = torch.argmax(vmask_probs, dim=2)
+        # vmask = vmask_probs[:,:,1] torch.argsort(vmask_probs, dim=2)
         print(self.infor_loss)
 
         if self._seq2seq_encoder:
@@ -210,7 +185,7 @@ class BasicClassifier(Model):
         logits = self._classification_layer(embedded_text)
         probs = torch.nn.functional.softmax(logits, dim=-1)
 
-        output_dict = {"logits": logits, "probs": probs,"vmask_probs":vmask_probs,"vmask":vmask}
+        output_dict = {"logits": logits, "probs": probs,"vmask_probs":vmask_probs,"vmask":"vmask"}
         output_dict["token_ids"] = util.get_token_ids_from_text_field_tensors(tokens)
         if label is not None:
             loss = self._loss(logits, label.long().view(-1))
