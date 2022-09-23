@@ -1,7 +1,7 @@
 from src.utils import get_args,logger,wrap_text
 from src.stage_two import load_models
 from src.edit_finder import EditFinder, EditEvaluator
-from src.predictors.predictor_utils import fake_tweep_clean
+from src.predictors.predictor_utils import fake_tweep_clean,clean_text
 import numpy as np
 from tqdm import tqdm
 import torch
@@ -10,6 +10,27 @@ import sys
 import re
 import emoji
 import time
+import json
+
+
+
+def archivedresult(task,input_sentence):
+
+    inout_path =  os.path.join("backend","data","input.json")
+    with open(inout_path) as json_file:
+        input_file = json.load(json_file)     
+                
+    key = [item['id'] for item in input_file[task] if input_sentence == item['text']]             
+    
+    if key:
+        archived_path =  os.path.join("backend","data","output.json")
+        with open(archived_path) as json_file:
+                result = json.load(json_file)
+        result = [item['result'] for item in result[task] if key[0] == item['id']]       
+        return result
+    else:
+        return key    
+
 
 
 def predict(task,input_sentence):
@@ -26,10 +47,13 @@ def predict(task,input_sentence):
             max_mask_frac=args.search.max_mask_frac,
             search_method=args.search.search_method,
             max_search_levels=args.search.max_search_levels)
+    
+    if task == "tweepfake":
+        _text = fake_tweep_clean(input_sentence)
+    else:
+        _text = clean_text(input_sentence)
 
-    _text = fake_tweep_clean(input_sentence)
     inputs = [_text]
-
     np.random.seed(0)
     input_indices = np.array(range(len(inputs)))
     np.random.shuffle(input_indices)
@@ -70,6 +94,8 @@ def predict(task,input_sentence):
                 list_dict.append(dict(zip(fieldnames, values)))       
 
     return indices,list_dict
+
+
 
 
 
