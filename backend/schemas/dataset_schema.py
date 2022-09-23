@@ -7,6 +7,9 @@ from typing import List
 class DatasetSchema:
     dataset_type : DatasetEnum
 
-
+class Result(BaseModel):
+    id : str
+    text : str
+    
 class TaskSchema(BaseModel):
-    result : List[str] 
+    str : List[Result] 

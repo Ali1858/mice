@@ -1,0 +1,28 @@
+{ 
+  "imdb":
+  [
+    {"id":"1","text":"This movie was great, and I suggest that you go see it before you judge."},
+    {"id":"2","text":"Actor turned director Bill Paxton follows up his promising debut, the Gothic-horror Frailty, with this family friendly sports drama about the 1913 U.S."},
+    {"id":"3","text":"I saw this film in a sneak preview, and it is delightful. The cinematography is unusually creative, the acting is good, and the story is fabulous"},
+    {"id":"4","text":"Bill Paxton has taken the true story of the 1913 US golf open and made a film that is about much more than an extra-ordinary game of golf."},
+    {"id":"5","text":"I felt this film did have many good qualities. The cinematography was certainly different exposing the stage aspect of the set and story."} 
+  ] , 
+    
+  "newsgroups":
+  [
+    {"id":"1","text":"I've just spent two solid months arguing that no such thing as an objective moral system exists."},
+    {"id":"2","text":"Dishonest money dwindles away, but he who gathers money little by little makes it grow.  Proverbs 13:11"},
+    {"id":"3","text":"Hello, i'm interested in those devices too. Could also send me your suggestions. Thank in advance"},
+    {"id":"4","text":"This is an invitation to send articles to the Informatica magazine. The first fully international issue has been published and echoes  are quite favorable."},
+    {"id":"5","text":"Most graphics systems I have seen have drawing routines that also specify a color for drawing, like  Drawpoint(x,y,color) or Drawline(x1,y1,x2,y2,color) or Fillrectangle(x1,y1,x2,y2,color)"} 
+  ] , 
+
+  "tweepfake":
+  [
+    {"id":"1","text":"justin timberlake really one of the goats if you think about it"},
+    {"id":"2","text":"I Wanna See Some Rainbows Out There Boys"},
+    {"id":"3","text":"Spent a great afternoon in Rohtak. Haryana has witnessed transformative changes in the last five years. Corruption and nepotism have disappeared."},
+    {"id":"4","text":"getting a 4k monitor so i can make posts"},
+    {"id":"5","text":"Once a product has FDA approval, the legislation would allow its sale in San Francisco again"} 
+  ] 
+}
