@@ -64,8 +64,12 @@ class TweepfakeDatasetReader(DatasetReader):
       
         for index,row in df.iterrows():
             text = fake_tweep_clean(row['text'], special_chars=["\r\n","\n","\t"])
-            labels[index] = get_label(str(row['account.type']))
-            strings[index] = text
+            if text is not None and len(text.split()) >= 2:
+                labels[index] = get_label(str(row['account.type']))
+                strings[index] = text
+            else:
+                strings[index] = None
+                labels[index] = None
 
         strings = [x for x in strings if x is not None]
         labels = [x for x in labels if x is not None]
@@ -88,7 +92,7 @@ class TweepfakeDatasetReader(DatasetReader):
         for index,row in df.iterrows():
           label = get_label(str(row['account.type']))
           text = fake_tweep_clean(row['text'], special_chars=["\r\n","\n","\t"])
-          if text is not None:
+          if text is not None and len(text.split()) >= 2:
             yield self.text_to_instance(text, label)
 
 

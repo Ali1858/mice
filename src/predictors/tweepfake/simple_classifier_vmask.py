@@ -34,7 +34,7 @@ class VMASK(nn.Module):
         return p
 
     def forward(self, x, p, training):
-        if training == "train":
+        if training:
             r = F.gumbel_softmax(p, tau=1,hard=True, dim=2)[:, :, 1:2]
             x_prime = r * x
             return x_prime
@@ -48,7 +48,7 @@ class VMASK(nn.Module):
         return p
 
 
-@Model.register("vmasker2_classifier")
+@Model.register("vmasker_classifier")
 class BasicClassifier(Model):
     """
     This `Model` implements a basic text classifier. After embedding the text into
