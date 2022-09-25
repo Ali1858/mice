@@ -79,6 +79,9 @@ class NewsgroupsDatasetReader(DatasetReader):
             topic = newsgroups_data.target[idx]
             label = newsgroups_data['target_names'][topic].split(".")[0]
             txt = clean_text(txt, special_chars=["\n", "\t"])
+
+            if len(txt.split()) > 300:
+                continue
             if len(txt) == 0 or len(label) == 0:
                 strings[i] = None
                 labels[i] = None
@@ -109,6 +112,8 @@ class NewsgroupsDatasetReader(DatasetReader):
             label = newsgroups_data['target_names'][topic].split(".")[0]
             txt = clean_text(txt, special_chars=["\n", "\t"])
             if len(txt) == 0 or len(label) == 0:
+                continue
+            elif len(txt.split()) > 300:
                 continue
             yield self.text_to_instance(txt, label)
 

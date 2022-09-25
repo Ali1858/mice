@@ -182,6 +182,7 @@ class SOCMasker(Masker):
                 temp_tokenizer.single_sequence_start_tokens + \
                 temp_tokenizer.single_sequence_end_tokens
         self.dr = dr
+        self.newsg_mapper = {'comp':0, 'rec':1, 'sci':2,'talk':3, 'soc':4,'misc':5,'alt':6}
 
 
     def merge_subtokens(self,tokens):
@@ -205,7 +206,11 @@ class SOCMasker(Masker):
     def get_importance(self,original_logits,original_label,prediction,delta_multiplier):
         logits = prediction["logits"]
         delta = logits[original_label]-original_logits[original_label]
-        if int(prediction["label"]) == original_label:
+        if len(original_logits) == 7:
+            label = self.newsg_mapper[prediction["label"]]
+        else:
+            label = int(prediction["label"])
+        if label == original_label:
             return delta
         return delta_multiplier*delta
 
@@ -218,7 +223,11 @@ class SOCMasker(Masker):
     def get_soc_masked_indices(self,editable_seg,predictor,merge_subtoken=True, nb_range=2,delta_multiplier=0.5):
         original_prediction = predictor.predict(editable_seg)
         original_logits = original_prediction["logits"]
-        original_label = int(original_prediction["label"])
+
+        if len(original_logits) == 7:
+          original_label = self.newsg_mapper[original_prediction["label"]]
+        else:
+          original_label = int(original_prediction["label"])
         tokens = original_prediction["tokens"]
 
         if merge_subtoken:
@@ -247,7 +256,7 @@ class SOCMasker(Masker):
                 imp_words_idx.append(idx)
         
         predictions = []
-        for x in self.batch(inputs, 286):
+        for x in self.batch(inputs, 256):
             predictions.extend(predictor.predict_batch_instance(x))
 
         for prediction,word_idx in zip(predictions,imp_words_idx):
@@ -385,7 +394,7 @@ class RandomMasker(Masker):
             mask_frac, 
             editor_tok_wrapper, 
             max_tokens,
-            dr
+            dr = None
         ):
         super().__init__(mask_frac, editor_tok_wrapper, max_tokens)
         self.dr = dr
