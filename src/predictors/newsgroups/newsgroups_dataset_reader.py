@@ -68,10 +68,9 @@ class NewsgroupsDatasetReader(DatasetReader):
         np.random.seed(self.random_seed)
         data_indices, newsgroups_data = self.get_data_indices(subset)
         np.random.shuffle(data_indices)
-        if "train" in subset:
-            data_indices = data_indices[:1000]
-        else:
-            data_indices = data_indices[:300]
+
+        count = 1000 if "train" in subset else 150
+        counter = 0
         strings = [None] * len(data_indices)
         labels = [None] * len(data_indices)
         for i, idx in enumerate(data_indices):
@@ -80,18 +79,20 @@ class NewsgroupsDatasetReader(DatasetReader):
             label = newsgroups_data['target_names'][topic].split(".")[0]
             txt = clean_text(txt, special_chars=["\n", "\t"])
 
-            if len(txt.split()) > 300:
-                continue
-            if len(txt) == 0 or len(label) == 0:
+            if len(txt) == 0 or len(label) == 0 or len(txt.split()) > 100:
                 strings[i] = None
                 labels[i] = None
             else:
                 strings[i] = txt
                 labels[i] = label
+                counter +=1
+            if counter >= count:
+                break
 
         strings = [x for x in strings if x is not None]
         labels = [x for x in labels if x is not None]
         assert len(strings) == len(labels)
+
 
         ts = [len(t.split()) for t in strings]
         print(f'size of test data {len(strings)}')
