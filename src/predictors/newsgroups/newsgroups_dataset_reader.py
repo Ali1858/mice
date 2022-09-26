@@ -71,7 +71,7 @@ class NewsgroupsDatasetReader(DatasetReader):
         if "train" in subset:
             data_indices = data_indices[:1000]
         else:
-            data_indices = data_indices
+            data_indices = data_indices[:300]
         strings = [None] * len(data_indices)
         labels = [None] * len(data_indices)
         for i, idx in enumerate(data_indices):
@@ -93,6 +93,10 @@ class NewsgroupsDatasetReader(DatasetReader):
         labels = [x for x in labels if x is not None]
         assert len(strings) == len(labels)
 
+        ts = [len(t.split()) for t in strings]
+        print(f'size of test data {len(strings)}')
+        print(f'average len of the test data {sum(ts)/len(ts)}')
+
         if return_labels:
             return strings, labels
         return strings
@@ -105,7 +109,7 @@ class NewsgroupsDatasetReader(DatasetReader):
         if "train" in subset:
             data_indices = data_indices[:1000]
         else:
-            data_indices = data_indices
+            data_indices = data_indices[:500]
         for idx in data_indices:
             txt = newsgroups_data.data[idx]
             topic = newsgroups_data.target[idx]
