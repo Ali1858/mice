@@ -86,8 +86,8 @@ def load_models(args):
     predictor = load_predictor(args.meta.task)
 
     editor_tokenizer_wrapper = PretrainedTransformerTokenizer(
-            't5-base', max_length=args.model.model_max_length)
-    editor_tokenizer, editor_model = load_base_t5(
+            't5-small', max_length=args.model.model_max_length)
+    editor_tokenizer, editor_model = load_small_t5(
                        max_length=args.model.model_max_length)
     device = get_device()
 
