@@ -35,6 +35,9 @@ from src.masker import Masker, RandomMasker, GradientMasker,SOCMasker
 from src.masker import GradientMasker,SOCMasker
 
 
+from src.masker import GradientMasker,SOCMasker
+
+
 logger = logging.getLogger("my-logger")
 FORMAT = "[%(filename)s:%(lineno)s - %(funcName)20s() ] %(message)s"
 logging.basicConfig(level=os.environ.get("LOGLEVEL", "INFO"), format=FORMAT)
