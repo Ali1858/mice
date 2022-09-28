@@ -94,12 +94,36 @@ class ImdbDatasetReader(DatasetReader):
         np.random.seed(self.random_seed)
         
         path_lst = list(self.get_path(file_path))
+        np.random.shuffle(path_lst)
+
+        count = 1000 if "train" in file_path else 150
+
         strings = [None] * len(path_lst)
         labels = [None] * len(path_lst)
+        counter = 0
         for i, p in enumerate(path_lst):
-            labels[i] = get_label(str(p)) 
-            strings[i] = clean_text(p.read_text(), 
+            text = clean_text(p.read_text(), 
                                     special_chars=["<br />", "\t"])
+            if len(text) == 0 or len(text.split()) > 100:
+                strings[i] = None
+                labels[i] = None
+            else:
+                strings[i] = text
+                labels[i] = get_label(str(p))
+                counter += 1
+
+            if counter >= count:
+                break
+
+        strings = [x for x in strings if x is not None]
+        labels = [x for x in labels if x is not None]
+        assert len(strings) == len(labels)
+        
+        ts = [len(t.split()) for t in strings]
+        print(f'size of test data {len(strings)}')
+        print(f'average len of the test data {sum(ts)/len(ts)}')
+
+        
         if return_labels:
             return strings, labels
         return strings 
@@ -114,6 +138,12 @@ class ImdbDatasetReader(DatasetReader):
                 not (cache_dir / self.TEST_DIR).exists():
             tf.extractall(cache_dir)
         path = self.get_path(file_path)
+        np.random.shuffle(path)
+
+        if "train" in file_path:
+            path = path[:1000]
+        else:
+            path = path[:500]
         for p in path:
             label = get_label(str(p))
             yield self.text_to_instance(

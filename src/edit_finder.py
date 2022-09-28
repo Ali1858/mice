@@ -22,7 +22,7 @@ import difflib
 from transformers import T5Tokenizer, T5Model, T5Config
 from transformers import T5ForConditionalGeneration
 
-from src.masker import Masker, RandomMasker, GradientMasker
+from src.masker import Masker, RandomMasker, GradientMasker,SOCMasker
 from src.utils import *
 
 logger = logging.getLogger("my-logger")
@@ -49,7 +49,7 @@ def get_max_instance(instance_candidates, contrast_pred_idx):
 class EditEvaluator():
     def __init__(
         self,
-        fluency_model_name = "t5-base",
+        fluency_model_name = t5_model_type,
         fluency_masker = RandomMasker(None, SpacyTokenizer(), 512) 
     ):
         self.device = get_device()
