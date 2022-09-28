@@ -7,11 +7,8 @@ from tqdm import tqdm
 import torch
 import os
 import sys
-import re
-import emoji
 import time
 import json
-
 
 
 def archivedresult(task,input_sentence):
@@ -31,7 +28,21 @@ def archivedresult(task,input_sentence):
     else:
         return key    
 
+def get_label_imdb(p):
+    assert "1" in p or "0" in p
+    return "pos" if "1" in p else "neg"
 
+
+def get_label_tweepfake(p):
+    assert "1" in p or "0" in p
+    return "human" if "bot" in p else "0"
+
+
+def get_label_newsgroups(p):
+    label = {0:"comp",1:"rec",2:"sci",3:"talk",4:"soc",5:"misc",6:"alt"}
+    assert "6" in p or "5" in p or "4" in p or "3" in p or "2" in p or "1" in p or "0" in p
+    return label.get(int(p))
+    
 
 def predict(task,input_sentence):
 
@@ -58,8 +69,7 @@ def predict(task,input_sentence):
     input_indices = np.array(range(len(inputs)))
     np.random.shuffle(input_indices)
         
-    fieldnames = ["idx","edited_input","edited_label","orig_label", 
-                      "orig_contrast_prob_pred","new_contrast_prob_pred", 
+    fieldnames = ["idx","edited_input","new_pred","orig_label", "new_contrast_prob_pred", 
                       "minimality", "num_edit_rounds", "mask_frac", "duration", "error"]
 
     list_dict,indices = [],[]
@@ -74,9 +84,21 @@ def predict(task,input_sentence):
                         max_edit_rounds=args.search.max_edit_rounds, 
                         edit_evaluator=edit_evaluator)
 
+                orig_contrast_prob = edited_list.orig_contrast_prob
+                orig_label = edited_list.orig_label
+                contrast_label = edited_list.contrast_label
+
+                if task == "imdb":
+                    contrast_label = get_label_imdb(contrast_label)
+                elif task == "tweepfake":
+                    contrast_label = get_label_tweepfake(contrast_label) 
+                elif task == "newsgroups":
+                    contrast_label = get_label_newsgroups(contrast_label)     
+                
                 torch.cuda.empty_cache()
                 sorted_list = edited_list.get_sorted_edits()
                 masked_sentence = sorted_list[0]['masked_sentence']
+               
                 indices = [index for index,word in enumerate(masked_sentence.split(" ")) if 'extra' in word]
 
             except Exception as e:
@@ -88,22 +110,25 @@ def predict(task,input_sentence):
             duration = end_time - start_time
 
             for s_idx, s in enumerate(sorted_list):
-                values = [ s_idx,s['edited_input'] ,s['edited_label'],edited_list.orig_label,edited_list.orig_contrast_prob,
+
+                if task == "tweepfake":
+                   edited_label = get_label_tweepfake(s['edited_label'])
+                   orig_label = get_label_tweepfake(edited_list.orig_label)
+                
+                elif task == "imdb":
+                   edited_label = get_label_imdb(s['edited_label'])
+                   orig_label = get_label_imdb(edited_list.orig_label)   
+
+                elif task == "newsgroups":
+                   edited_label = get_label_newsgroups(s['edited_label'])
+                   orig_label = get_label_newsgroups(edited_list.orig_label)     
+                               
+                values = [ s_idx,s['edited_input'] ,edited_label,orig_label,
                         s['edited_contrast_prob'].tolist(),s['minimality'], s['num_edit_rounds'],s['mask_frac'],duration,error
                 ]
+
                 list_dict.append(dict(zip(fieldnames, values)))       
 
-    return indices,list_dict
-
-
-
-
-
-
-
-
-
-   
-
+    return indices,list_dict,orig_contrast_prob,orig_label,contrast_label
 
 

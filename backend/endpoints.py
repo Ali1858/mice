@@ -1,4 +1,3 @@
-import imp
 from fastapi import FastAPI,Depends
 from fastapi.responses import RedirectResponse
 from backend.schemas.dataset_schema import DatasetSchema, TaskSchema
@@ -35,10 +34,13 @@ def get_prediction(
         return is_available
 
     else :
-        masked_index,result = predict(task.dataset_type,input_sentence)
+        masked_index,result,orig_contrast_prob,orig_pred,contrast_pred = predict(task.dataset_type,input_sentence)
         return [{
             "input":input_sentence,
             "masked_index":masked_index,
+            "orig_contrast_prob":orig_contrast_prob,
+            "orig_pred":orig_pred,
+            "contrast_pred":contrast_pred,
             "prediction": result
             }]
 

@@ -38,7 +38,7 @@ from src.predictors.tweepfake.tweepfake_dataset_reader import TweepfakeDatasetRe
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
-t5_model_type = "t5-small"
+t5_model_type = "t5-base"
 ####################################################################
 ######################## Arg Parsing Utils #########################
 ####################################################################
@@ -242,6 +242,12 @@ def load_base_t5(max_length=700):
     tokenizer = T5TokenizerFast.from_pretrained("t5-base", truncation=True)
     return tokenizer, model
 
+def load_small_t5(max_length=700):
+    t5_config = T5Config.from_pretrained("t5-small", n_positions=max_length)
+    model = T5ForConditionalGeneration.from_pretrained("t5-small", 
+            config=t5_config)
+    tokenizer = T5TokenizerFast.from_pretrained("t5-small", truncation=True)
+    return tokenizer, model
 
 def get_device():
     return 'cuda' if torch.cuda.is_available() else 'cpu'
