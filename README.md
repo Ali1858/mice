@@ -33,7 +33,7 @@
 
 
 # Containerize a Backend FastAPI with Docker
-- To run this project, you'll need to have [Docker](https://docs.docker.com/get-docker/) installed.
+- To run this project, you'll need to have [Docker](https://docs.docker.com/get-docker/) installed and Make sure that you have a docker file present into your current directory
 
 ## Getting started
 - Build the container, providing a tag:  

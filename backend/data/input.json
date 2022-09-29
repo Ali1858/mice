@@ -1,7 +1,7 @@
 { 
   "imdb":
   [
-    {"id":"1","text":"This movie was great, and I suggest that you go see it before you judge."},
+    {"id":"1","text":"This movie was great, and I suggest that you go see it before you judge"},
     {"id":"2","text":"Actor turned director Bill Paxton follows up his promising debut, the Gothic-horror Frailty, with this family friendly sports drama about the 1913 U.S."},
     {"id":"3","text":"I saw this film in a sneak preview, and it is delightful. The cinematography is unusually creative, the acting is good, and the story is fabulous."},
     {"id":"4","text":"Bill Paxton has taken the true story of the 1913 US golf open and made a film that is about much more than an extra-ordinary game of golf."},
@@ -19,10 +19,10 @@
 
   "tweepfake":
   [
-    {"id":"1","text":"justin timberlake really one of the goats if you think about it"},
-    {"id":"2","text":"I Wanna See Some Rainbows Out There Boys"},
-    {"id":"3","text":"Spent a great afternoon in Rohtak. Haryana has witnessed transformative changes in the last five years. Corruption and nepotism have disappeared."},
-    {"id":"4","text":"getting a 4k monitor so i can make posts"},
-    {"id":"5","text":"Once a product has FDA approval, the legislation would allow its sale in San Francisco again"} 
+    {"id":"1","text":"justin timberlake really one of the goats if you think about it."},
+    {"id":"2","text":"I Wanna See Some Rainbows Out There Boys."},
+    {"id":"3","text":"Spent a great afternoon in Rohtak. Haryana has witnessed transformative changes in the last five years. Corruption and nepotism have disappeared"},
+    {"id":"4","text":"getting a 4k monitor so i can make posts."},
+    {"id":"5","text":"Once a product has FDA approval, the legislation would allow its sale in San Francisco again."} 
   ] 
 }

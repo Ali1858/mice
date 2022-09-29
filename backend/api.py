@@ -35,7 +35,7 @@ def get_label_imdb(p):
 
 def get_label_tweepfake(p):
     assert "1" in p or "0" in p
-    return "human" if "bot" in p else "0"
+    return "human" if "1" in p else "bot"
 
 
 def get_label_newsgroups(p):
