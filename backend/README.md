@@ -1,5 +1,5 @@
 ## Application
-- Backend application for Move
+- Backend application for Move37
 
 ## Aim of the project
 - The aim of this project is to represent Minimal Contrastive Editing using Variational Word Masking research paper output results, Consisting of multiple data metric points, graphs and generated counterfactual sentences from the model.
