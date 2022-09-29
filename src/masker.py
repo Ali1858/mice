@@ -165,7 +165,8 @@ class SOCMasker(Masker):
             mask_frac, 
             editor_tok_wrapper, 
             predictor, 
-            max_tokens
+            max_tokens,
+            dr
         ):
         super().__init__(mask_frac, editor_tok_wrapper, max_tokens)
 
@@ -180,6 +181,8 @@ class SOCMasker(Masker):
                 temp_tokenizer.sequence_pair_end_tokens + \
                 temp_tokenizer.single_sequence_start_tokens + \
                 temp_tokenizer.single_sequence_end_tokens
+        self.dr = dr
+        self.newsg_mapper = {'comp':0, 'rec':1, 'sci':2,'talk':3, 'soc':4,'misc':5,'alt':6}
 
 
     def merge_subtokens(self,tokens):
@@ -200,11 +203,31 @@ class SOCMasker(Masker):
         return new_tokens, tokens_idx
 
 
-        
-    def get_soc_masked_indices(self,editable_seg,predictor,merge_subtoken=True, nb_range=2):
+    def get_importance(self,original_logits,original_label,prediction,delta_multiplier):
+        logits = prediction["logits"]
+        delta = logits[original_label]-original_logits[original_label]
+        if len(original_logits) == 7:
+            label = self.newsg_mapper[prediction["label"]]
+        else:
+            label = int(prediction["label"])
+        if label == original_label:
+            return delta
+        return delta_multiplier*delta
+
+    def batch(self,iterable, n=128):
+        l = len(iterable)
+        for ndx in range(0, l, n):
+            yield iterable[ndx:min(ndx + n, l)]
+
+
+    def get_soc_masked_indices(self,editable_seg,predictor,merge_subtoken=True, nb_range=2,delta_multiplier=0.5):
         original_prediction = predictor.predict(editable_seg)
         original_logits = original_prediction["logits"]
-        original_label = int(original_prediction["label"])
+
+        if len(original_logits) == 7:
+          original_label = self.newsg_mapper[original_prediction["label"]]
+        else:
+          original_label = int(original_prediction["label"])
         tokens = original_prediction["tokens"]
 
         if merge_subtoken:
@@ -213,7 +236,9 @@ class SOCMasker(Masker):
             new_tokens = tokens
             tokens_idx = [[idx] for idx in range(len(tokens))]
         
-        word_importance = []
+        word_importance = [-99]*len(new_tokens)
+        imp_words_idx = []
+        inputs = []
         for idx, token in enumerate(new_tokens):
 
             filter_token_list = ["<s>", "</s>","<unk>","<s>,</s>","<pad>"]
@@ -227,15 +252,16 @@ class SOCMasker(Masker):
                 after_removed.extend(["<pad>"]+new_tokens[end+1:])
 
                 masked_input = ''.join([token.replace('Ġ',' ').replace('ĉ',' ') for token in after_removed[1:-1]])
-                prediction = predictor.predict(masked_input)
-                logits = prediction["logits"]
-                if int(prediction["label"]) == original_label:
-                    delta = logits[original_label]-original_logits[original_label]
-                    word_importance.append(delta)
-                else:
-                    word_importance.append(-99)
-            else:
-                word_importance.append(-99)
+                inputs.append(self.dr.text_to_instance(masked_input))
+                imp_words_idx.append(idx)
+        
+        predictions = []
+        for x in self.batch(inputs, 256):
+            predictions.extend(predictor.predict_batch_instance(x))
+
+        for prediction,word_idx in zip(predictions,imp_words_idx):
+            delta = self.get_importance(original_logits,original_label,prediction,delta_multiplier)
+            word_importance[word_idx] = delta
         sorted_word_importance = np.argsort(word_importance)[::-1]
         
         extended_idx = []
@@ -367,9 +393,11 @@ class RandomMasker(Masker):
             self, 
             mask_frac, 
             editor_tok_wrapper, 
-            max_tokens
+            max_tokens,
+            dr = None
         ):
         super().__init__(mask_frac, editor_tok_wrapper, max_tokens)
+        self.dr = dr
    
     def _get_mask_indices(self, editable_seg, editor_toks, pred_idx, **kwargs):
         """ Helper function to get indices of Editor tokens to mask. """
@@ -421,6 +449,7 @@ class GradientMasker(Masker):
             editor_tok_wrapper, 
             predictor, 
             max_tokens, 
+            dr,
             grad_type = "normal_l2", 
             sign_direction = None,
             num_integrated_grad_steps = 10
@@ -431,6 +460,7 @@ class GradientMasker(Masker):
         self.grad_type = grad_type
         self.num_integrated_grad_steps = num_integrated_grad_steps
         self.sign_direction = sign_direction
+        self.dr = dr
 
         if ("signed" in self.grad_type and sign_direction is None):
             error_msg = "To calculate a signed gradient value, need to " + \

@@ -67,6 +67,10 @@ class NewsgroupsDatasetReader(DatasetReader):
     def get_inputs(self, subset, return_labels = False):
         np.random.seed(self.random_seed)
         data_indices, newsgroups_data = self.get_data_indices(subset)
+        np.random.shuffle(data_indices)
+
+        count = 1000 if "train" in subset else 150
+        counter = 0
         strings = [None] * len(data_indices)
         labels = [None] * len(data_indices)
         for i, idx in enumerate(data_indices):
@@ -74,16 +78,25 @@ class NewsgroupsDatasetReader(DatasetReader):
             topic = newsgroups_data.target[idx]
             label = newsgroups_data['target_names'][topic].split(".")[0]
             txt = clean_text(txt, special_chars=["\n", "\t"])
-            if len(txt) == 0 or len(label) == 0:
+
+            if len(txt) == 0 or len(label) == 0 or len(txt.split()) > 100:
                 strings[i] = None
                 labels[i] = None
             else:
                 strings[i] = txt
                 labels[i] = label
+                counter +=1
+            if counter >= count:
+                break
 
         strings = [x for x in strings if x is not None]
         labels = [x for x in labels if x is not None]
         assert len(strings) == len(labels)
+
+
+        ts = [len(t.split()) for t in strings]
+        print(f'size of test data {len(strings)}')
+        print(f'average len of the test data {sum(ts)/len(ts)}')
 
         if return_labels:
             return strings, labels
@@ -92,13 +105,20 @@ class NewsgroupsDatasetReader(DatasetReader):
     @overrides
     def _read(self, subset):
         np.random.seed(self.random_seed)
-        data_indices = self.get_data_indices(subset)
+        data_indices,newsgroups_data = self.get_data_indices(subset)
+        np.random.shuffle(data_indices)
+        if "train" in subset:
+            data_indices = data_indices[:1000]
+        else:
+            data_indices = data_indices[:500]
         for idx in data_indices:
             txt = newsgroups_data.data[idx]
             topic = newsgroups_data.target[idx]
             label = newsgroups_data['target_names'][topic].split(".")[0]
             txt = clean_text(txt, special_chars=["\n", "\t"])
             if len(txt) == 0 or len(label) == 0:
+                continue
+            elif len(txt.split()) > 300:
                 continue
             yield self.text_to_instance(txt, label)
 
