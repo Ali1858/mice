@@ -1,50 +1,119 @@
-## Application
-- Backend application for Move
+# Minimal Contrastive Editing (MiCE) 🐭
 
-## Getting Started
-- Go to terminal and take git pull by giving project directory and backend branch
-`git clone -b backend <project-directory>`
+This repository contains code for our paper, [Explaining NLP Models via Minimal Contrastive Editing (MiCE)](https://arxiv.org/pdf/2012.13985.pdf).
 
-## Setup virtual environment
-- To manage and activate virtual environment to your project
-`pip3 install virtualenv`
-`virtualenv venv --python=python3.7`    
-`source venv/bin/activate`   
+## Citation
+```bibtex
+@inproceedings{Ross2020ExplainingNM,
+    title = "Explaining NLP Models via Minimal Contrastive Editing (MiCE)",
+    author = "Ross, Alexis  and Marasovi{\'c}, Ana  and Peters, Matthew E.",
+    booktitle = "Findings of the Association for Computational Linguistics: ACL 2021",
+    publisher = "Association for Computational Linguistics",
+    url= "https://arxiv.org/abs/2012.13985",
+}
+```
+## Installation
 
-- restart VScode and open any python file to activate the environment
-## Setup requirements
-- To download the project requirements using
-`pip install -r requirements.txt`
+1.  Clone the repository.
+    ```bash
+    git clone https://github.com/allenai/mice.git
+    cd mice
+    ```
 
-## Download Pretrained Models
-- To download Pretrained Models, make sure that you have wget package installed
-`bash download_models.sh`
+2.  [Download and install Conda](https://conda.io/projects/conda/en/latest/user-guide/install/index.html).
 
-## Run Fast API swagger 
-- To run the API endpoints using uvicorn, 
-`uvicorn backend.endpoints:router --host=0.0.0.0 --reload`
+3.  Create a Conda environment.
 
-## Test API endpoints
-- To run the dataset API 
-`curl -X 'GET' 'http://127.0.0.1:8000/Datasets' -H 'accept: application/json'`
+    ```bash
+    conda create -n mice python=3.7
+    ```
+ 
+4.  Activate the environment.
 
-- To run the Prediction API 
-`curl -X 'GET' 'http://127.0.0.1:8000/Prediction?input_sentence=< your input>&dataset_type=<dataset>' -H 'accept: application/json'`
+    ```bash
+    conda activate mice
+    ```
+    
+5.  Download the requirements.
+
+    ```bash
+    pip3 install -r requirements.txt
+    ```
+
+## Quick Start
+
+1. **Download Task Data**: If you want to work with the RACE dataset, download it here: [Link](https://www.cs.cmu.edu/~glai1/data/race/). 
+The commands below assume that this data, after downloaded, is stored in `data/RACE/`. 
+All other task-specific datasets are automatically downloaded by the commands below.
+2. **Download Pretrained Models**: You can download pretrained models by running:
+
+    ```bash
+    bash download_models.sh
+    ```
+
+      For each task (IMDB/Newsgroups/RACE), this script saves the:
+      
+      - Predictor model to: `trained_predictors/{TASK}/model/model.tar.gz`.
+      - Editor checkpoint to: `results/{TASK}/editors/mice/{TASK}_editor.pth`.
+
+4. **Generate Edits**: Run the following command to generate edits for a particular task with our pretrained editor. It will write edits to `results/{TASK}/edits/{STAGE2EXP}/edits.csv`.
+
+        python run_stage_two.py -task {TASK} -stage2_exp {STAGE2EXP} -editor_path results/{TASK}/editors/mice/{TASK}_editor.pth
+        
+      
+      For instance, to generate edits for the IMDB task, the following command will save edits to `results/imdb/edits/mice_binary/edits.csv`:
+      
+      ```bash
+      python run_stage_two.py -task imdb -stage2_exp mice_binary -editor_path results/imdb/editors/mice/imdb_editor.pth
+      ```
+      
+      
+4. **Inspect Edits**: Inspect these edits with the demo notebook `notebooks/evaluation.ipynb`.
+
+## More Information
+
+`run_all.sh` contains commands for recreating the main experiments in our paper.
+
+### Training Predictors
+
+We use AllenNLP to train our Predictor models. Code for training Predictors can be found in `src/predictors/`. 
+See `run_all.sh` for commands used to train Predictors, which will save models to subfolders in `trained_predictors`.
+
+Alternatively, you can work with our pretrained models, which you can download with `download_models.sh`.
 
 
-# Containerize a Backend FastAPI with Docker
-- To run this project, you'll need to have [Docker](https://docs.docker.com/get-docker/) installed and Make sure that you have a docker file present into your current directory
+### Training Editors
+The following command will train an editor (i.e. run Stage 1 of MiCE) for a particular task. It saves checkpoints to `results/{TASK}/editors/{STAGE1EXP}/checkpoints/`.
 
-## Getting started
-- Build the container, providing a tag:  
+    python run_stage_one.py -task {TASK} -stage1_exp {STAGE1EXP}
 
-`docker build -t moveapi_backend . `
 
-- Then you can run the container, passing in a name for the container, and the previously used tag:  
+### Generating Edits
+The following command will find MiCE edits (i.e. run Stage 2 of MiCE) for a particular task. It saves edits to `results/{TASK}/edits/{STAGE2EXP}/edits.csv`. `-editor_path` determines the Editor model to use. Defaults to our pretrained Editor.
 
-`docker run -d --name api -p 8000:8000 moveapi_backend`
+    python run_stage_two.py -task {TASK} -stage2_exp {STAGE2EXP} -editor_path results/{TASK}/editors/mice/{TASK}_editor.pth
 
-- Note that if you used the code as-is with the `--reload` option that you won't be able to kill the container using `CTRL + C`.  
 
-- Instead in another terminal window you can kill the container using Docker's kill command:  
-`docker kill api`
+### Inspecting Edits
+  The notebook `notebooks/evaluation.ipynb` contains some code to inspect edits.
+  To compute fluency of edits, see the `EditEvaluator` class in `src/edit_finder.py`.
+
+## Adding a Task
+Follow the steps below to extend this repo for your own task.
+
+1.  Create a subfolder within `src/predictors/{TASK}`
+
+2.  **Dataset reader**: Create a task specific dataset reader in a file `{TASK}_dataset_reader.py` within that subfolder. It should have methods: `text_to_instance()`, `_read()`, and `get_inputs()`.
+
+3.  **Dataset for tweepfake**: Download the data from [kaggle twitter dataset](https://www.kaggle.com/code/kerneler/starter-tweepfake-twitter-deep-fake-9a6ff869-1/data) and keep it inside the folder `src/predictors/tweepfake`.
+
+4.  **Train Predictor**: Create a training config (see `src/predictors/imdb/imdb_roberta.json` for an example). Then train the Predictor using AllenNLP (see above commands or commands in `run_all.sh` for examples).
+
+5.  **Train Editor Model**: Depending on the task, you may have to create a new `StageOneDataset` subclass (see `RaceStageOneDataset` in `src/dataset.py` for an example of how to inherit from `StageOneDataset`). 
+    - For classification tasks, the existing base `StageOneDataset` class should work.
+    - For new multiple-choice QA tasks with dataset readers patterned after the `RaceDatasetReader` (`src/predictors/race/race_dataset_reader.py`), the existing `RaceStageOneDataset` class should work.
+
+6.  **Generate Edits**: Depending on the task, you may have to create a new `Editor` subclass (see `RaceEditor` in `src/editor.py` for an example of how to inherit from `Editor`). 
+    - For classification tasks, the existing base `Editor` class should work. 
+    - For multiple-choice QA with dataset readers patterned after `RaceDatasetReader`, the existing `RaceEditor` class should work. 
+
