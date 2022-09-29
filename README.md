@@ -1,7 +1,7 @@
 # The Research project for Machine Learning Application 2022: Team move37
 ## Minimal Contrastive Editing (MiCE) 🐭
 
-Our research is based on MICE model. This repository contains code for the paper , [Explaining NLP Models via Minimal Contrastive Editing (MiCE)](https://arxiv.org/pdf/2012.13985.pdf) and SOCMasker [] integrated together.
+Our research is based on MICE model. This repository contains code for the paper , [Explaining NLP Models via Minimal Contrastive Editing (MiCE)](https://arxiv.org/pdf/2012.13985.pdf) and SOCMasker [https://drive.google.com/file/d/1kz5EDCpmr00vKIL0NBObfuEwGfH72vW5/view] integrated together.
 
 ```
 ## Installation
