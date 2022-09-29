@@ -2,7 +2,7 @@
 
 ## Aim of the project
 
-The aim of this project is to reprecent Minimal Contrastive Editing using Variational Word Masking research paper output results, Consisting of multiple data metric points, graphs and generated counterfactual sentences from the model.
+The aim of this project is to represent SOC Masker For Generating Contrastive Edits research paper output results, Consisting of multiple data metric points, graphs and generated counterfactual sentences from the model.
 
 ## Running the project
 If flutter not installed, follow instruction to install flutter in local system
