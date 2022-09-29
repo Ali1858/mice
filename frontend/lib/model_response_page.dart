@@ -134,7 +134,9 @@ class _ModelResponsePageState extends State<ModelResponsePage> {
                                         const SizedBox(
                                           width: 5,
                                         ),
-                                        const ToolTip(info: "testing"),
+                                        const ToolTip(
+                                            info:
+                                                "Probability of contrast class with the original sentence"),
                                       ],
                                     ),
                                     const SizedBox(
@@ -215,7 +217,7 @@ class _ModelResponsePageState extends State<ModelResponsePage> {
                                         RichText(
                                           text: TextSpan(
                                             text:
-                                                'Contrast Label for \nOriginal Label :',
+                                                'Contrast Label for \nOriginal Label : ',
                                             style: GoogleFonts.poppins(
                                               fontSize: 16,
                                               color: Colors.blueAccent,
@@ -236,7 +238,9 @@ class _ModelResponsePageState extends State<ModelResponsePage> {
                                         const SizedBox(
                                           width: 5,
                                         ),
-                                        const ToolTip(info: "testing"),
+                                        const ToolTip(
+                                            info:
+                                                "The second most probable class with the original sentence is considered a contrast class."),
                                       ],
                                     ),
                                     const SizedBox(
@@ -248,7 +252,7 @@ class _ModelResponsePageState extends State<ModelResponsePage> {
                                       children: [
                                         RichText(
                                           text: TextSpan(
-                                            text: 'Predicted Contrast Label :',
+                                            text: 'Predicted Contrast Label : ',
                                             style: GoogleFonts.poppins(
                                               fontSize: 16,
                                               color: Colors.blueAccent,
@@ -269,7 +273,9 @@ class _ModelResponsePageState extends State<ModelResponsePage> {
                                         const SizedBox(
                                           width: 5,
                                         ),
-                                        const ToolTip(info: "testing"),
+                                        const ToolTip(
+                                            info:
+                                                "Predicted class with the contrastive edited sentence."),
                                       ],
                                     ),
                                     // SizedBox(
@@ -404,7 +410,7 @@ class _ModelResponsePageState extends State<ModelResponsePage> {
                                               textStyle: TextStyle(
                                                   color:
                                                       containerBackgroundColor,
-                                                  fontSize: 18,
+                                                  fontSize: 16,
                                                   fontWeight: FontWeight.bold),
                                             ),
                                           ),

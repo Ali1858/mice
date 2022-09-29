@@ -1,4 +1,7 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:move37/chart.dart';
 import 'package:move37/model_response_page.dart';
@@ -26,6 +29,7 @@ class _HomePageTestState extends State<HomePageTest> {
   List dataSets = [];
   var apiRespone;
   TextEditingController customSentence = TextEditingController();
+  Timer? _timer;
   List<List<Map<String, dynamic>>> gData = [
     [
       {
@@ -118,29 +122,54 @@ class _HomePageTestState extends State<HomePageTest> {
   void fetchModelResponse() async {
     setState(() {
       /// Trigger Loader
-      // isLoading = true;
+      isLoading = true;
     });
 
-    if (groupVal == -1) {
-      selectedSent = customSentence.value.text;
+    if (groupVal != -1) {
+      if (groupVal == -1) {
+        selectedSent = customSentence.value.text;
+      }
+      // print(selectedSent);
+      // print(selectedDataset);
+
+      ///Send chosen dataset and string data
+
+      await apiBaseHelper
+          .getModelResponse(
+              groupVal == -1 ? -1 : (groupVal), selectedSent, selectedDataset)
+          .then((value) {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+              builder: (context) => ModelResponsePage(
+                    response: value[0],
+                  )),
+        );
+      });
     }
-    // print(selectedSent);
-    // print(selectedDataset);
-
-    ///Send chosen dataset and string data
-
-    await apiBaseHelper
-        .getModelResponse(
-            groupVal == -1 ? -1 : (groupVal), selectedSent, selectedDataset)
-        .then((value) {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(
-            builder: (context) => ModelResponsePage(
-                  response: value[0],
-                )),
-      );
+    _timer = Timer(Duration(seconds: 25), () {
+      Fluttertoast.showToast(
+          msg: "Internal Server Error:500",
+          toastLength: Toast.LENGTH_LONG,
+          gravity: ToastGravity.CENTER,
+          timeInSecForIosWeb: 1,
+          backgroundColor: Colors.red,
+          textColor: Colors.white,
+          fontSize: 16.0);
+      setState(() {
+        /// Trigger Loader
+        isLoading = false;
+      });
     });
+  }
+
+  @override
+  void dispose() {
+    if (_timer != null) {
+      _timer?.cancel();
+      _timer = null;
+    }
+    super.dispose();
   }
 
   void changeSentenses(int index) {
@@ -179,7 +208,7 @@ class _HomePageTestState extends State<HomePageTest> {
       body: isLoading
           ? const Center(
               child: CircularProgressIndicator.adaptive(
-                  backgroundColor: Colors.white),
+                  backgroundColor: Colors.black),
             )
           : Center(
               child: SingleChildScrollView(
