@@ -1,2 +1,2 @@
 runtime: python37
-entrypoint: uvicorn backend.endpoints:router --host=0.0.0.0 --reload
+entrypoint:  gunicorn -w 4 -k uvicorn.workers.UvicornWorker backend.endpoints:router
