@@ -2,14 +2,19 @@
 - Backend application for Move
 
 ## Getting Started
-- Go to terminal and take git pull by giving project directory and backend branch
-`git clone -b backend <project-directory>`
+- Go to terminal and take git clone of main branch with project directory 
+`git clone -b main <project-directory>`
 
+## Setup Conda environment
+- To download and install miniconda, make sure that you have wget package installed
+`wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh`
+`bash Miniconda3-latest-Linux-x86_64.sh`
+
+- Then restart the terminal
 ## Setup virtual environment
 - To manage and activate virtual environment to your project
-`pip3 install virtualenv`
-`virtualenv venv --python=python3.7`    
-`source venv/bin/activate`   
+`conda create -n venv python=3.7`
+`conda activate venv`    
 
 - restart VScode and open any python file to activate the environment
 ## Setup requirements
@@ -17,7 +22,7 @@
 `pip install -r requirements.txt`
 
 ## Download Pretrained Models
-- To download Pretrained Models, make sure that you have wget package installed
+- To download Pretrained Models
 `bash download_models.sh`
 
 ## Run Fast API swagger 
