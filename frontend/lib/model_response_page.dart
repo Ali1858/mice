@@ -405,7 +405,7 @@ class _ModelResponsePageState extends State<ModelResponsePage> {
                                             width: 10,
                                           ),
                                           Text(
-                                            " Predicted Class: ${prediction[index]['new_contrast_prob_pred'].toStringAsFixed(3)}",
+                                            " Predicted Class Probability: ${prediction[index]['new_contrast_prob_pred'].toStringAsFixed(3)}",
                                             style: GoogleFonts.poppins(
                                               textStyle: TextStyle(
                                                   color:
