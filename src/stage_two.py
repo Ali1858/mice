@@ -32,6 +32,12 @@ from src.predictors.newsgroups.newsgroups_dataset_reader import NewsgroupsDatase
 from src.predictors.race.race_dataset_reader import RaceDatasetReader
 from src.masker import Masker, RandomMasker, GradientMasker,SOCMasker
 
+from src.masker import GradientMasker,SOCMasker
+
+
+from src.masker import GradientMasker,SOCMasker
+
+
 logger = logging.getLogger("my-logger")
 FORMAT = "[%(filename)s:%(lineno)s - %(funcName)20s() ] %(message)s"
 logging.basicConfig(level=os.environ.get("LOGLEVEL", "INFO"), format=FORMAT)
@@ -70,7 +76,10 @@ def load_editor_weights(editor_model, editor_path):
                     it must contain a 'best.pth' file but found none in given \
                     dir. Please give direct path to file containing weights.")
     logger.info(f"Loading Editor weights from: {editor_path}")
-    editor_model.load_state_dict(torch.load(editor_path))
+    
+    device = get_device()
+    editor_model.load_state_dict(torch.load(editor_path,map_location = device))   
+    
     return editor_model
 
 def load_models(args):
@@ -78,11 +87,14 @@ def load_models(args):
 
     logger.info("Loading models...")
     predictor = load_predictor(args.meta.task)
+
     editor_tokenizer_wrapper = PretrainedTransformerTokenizer(
-            t5_model_type, max_length=args.model.model_max_length)
-    editor_tokenizer, editor_model = load_base_t5(
+            't5-small', max_length=args.model.model_max_length)
+    editor_tokenizer, editor_model = load_small_t5(
                        max_length=args.model.model_max_length)
     device = get_device()
+
+
     editor_model = load_editor_weights(editor_model, args.meta.editor_path)
     editor_model = editor_model.to(device)
 
